@@ -61,15 +61,55 @@ const I18N={
     personalRecords:'Личные рекорды',achievementsTitle:'🏅 Достижения',btnResetAll:'⚠️ Сбросить весь прогресс',
     leaderboardTitle:'🏆 Таблица лидеров',inviteTitle:'🎁 Пригласи друга',btnInvite:'🔗 Поделиться ссылкой',
     settingsTitle:'⚙️ Настройки',faqTitle:'❓ Как пользоваться',feedbackTitle:'💬 Обратная связь',
+    // новые ключи
+    streakDaysSub:'подряд с тренировкой',
+    questsTitle:'Задания на сегодня',challengeTitle:'Вызов дня',
+    progressChart:'График прогресса',progressManage:'Управление',workoutHistory:'История тренировок',
+    workoutPrograms:'Программы тренировок',hiitIntervals:'⚡ HIIT Интервалы',workoutTimer:'⏱️ Таймер тренировки',
+    weeklyChallenge:'🌍 Челлендж недели — все вместе',teamFriends:'👥 Команда друзей',
+    notificationsTitle:'🔔 Уведомления',shareResult:'📤 Поделиться результатом',appUpdate:'🔄 Обновление приложения',
+    hiitWork:'Работа (сек)',hiitRest:'Отдых (сек)',hiitRounds:'Раундов',timerMins:'Минуты',
+    roomNamePh:'Название команды',roomCodePh:'Код комнаты',
+    publishBtn:'🌍 Опубликовать мой результат',notifBtn:'🔔 Разрешить уведомления',
+    prefSide:'Приоритетная сторона',voiceHints:'Голосовые подсказки',volume:'Громкость',
+    cameraHintLabel:'Подсказка по камере перед каждым стартом',
+    replayOnboard:'🎬 Показать приветствие заново',
+    saveSet:'💾 Сохранить подход',historyBtn:'📜 История',exportCSV:'📤 CSV',clearBtn:'🗑️ Очистить',
+    startStep:'▶️ Начать шаг',nextStep:'⏭️ Следующий',startHiit:'⚡ Запустить HIIT',startTimer:'▶️ Запустить',
+    sessTime:'Время',sessReps:'Повт.',sessCal:'Калорий',sessStreak:'Серия',
+    statCal:'🔥 Калории',statStreak:'⚡ Серия',statRecord:'🏆 Рекорд',
+    totalReps:'Повторений',totalCal:'Калорий',maxStreak:'Макс. серия',levelLabel:'Уровень',
+    chartReps:'📊 Повторения',chartTech:'🎯 Техника',
+    shareBtn:'📤 Поделиться',updateApp:'🔄 Обновить приложение',
   },
   en:{
     appName:'FitPulse',menuTitle:'Menu',tabTrain:'🏋️ Workout',tabProfile:'👤 Profile',tabProgress:'📊 Progress',tabPrograms:'📋 Programs',tabCommunity:'🏆 Leaderboard',
     exerciseTitle:'Exercise',goalLabel:'🎯 Goal:',modeCam:'📷 Camera',modeVid:'🎥 Video',
     btnStart:'🚀 START',btnReset:'🔄 Reset',btnPause:'⏸️ Pause',btnStop:'⏹️ Stop',btnHiit:'⚡ HIIT',btnTimer:'⏱️ Timer',btnVoice:'🎙️ Voice',
-    profileSettings:'Profile settings',nameLabel:'Name',weightLabel:'Weight (kg)',heightLabel:'Height (cm)',btnSave:'💾 Save',
-    personalRecords:'Personal records',achievementsTitle:'🏅 Achievements',btnResetAll:'⚠️ Reset all progress',
-    leaderboardTitle:'🏆 Leaderboard',inviteTitle:'🎁 Invite a friend',btnInvite:'🔗 Share link',
+    profileSettings:'Profile Settings',nameLabel:'Name',weightLabel:'Weight (kg)',heightLabel:'Height (cm)',btnSave:'💾 Save',
+    personalRecords:'Personal Records',achievementsTitle:'🏅 Achievements',btnResetAll:'⚠️ Reset all progress',
+    leaderboardTitle:'🏆 Leaderboard',inviteTitle:'🎁 Invite a Friend',btnInvite:'🔗 Share link',
     settingsTitle:'⚙️ Settings',faqTitle:'❓ How to use',feedbackTitle:'💬 Feedback',
+    // new keys
+    streakDaysSub:'days in a row',
+    questsTitle:'Today\'s Quests',challengeTitle:'Daily Challenge',
+    progressChart:'Progress Chart',progressManage:'Manage',workoutHistory:'Workout History',
+    workoutPrograms:'Workout Programs',hiitIntervals:'⚡ HIIT Intervals',workoutTimer:'⏱️ Workout Timer',
+    weeklyChallenge:'🌍 Weekly Challenge — Together',teamFriends:'👥 Friend Team',
+    notificationsTitle:'🔔 Notifications',shareResult:'📤 Share Result',appUpdate:'🔄 App Update',
+    hiitWork:'Work (sec)',hiitRest:'Rest (sec)',hiitRounds:'Rounds',timerMins:'Minutes',
+    roomNamePh:'Team name',roomCodePh:'Room code',
+    publishBtn:'🌍 Publish my result',notifBtn:'🔔 Allow notifications',
+    prefSide:'Preferred side',voiceHints:'Voice hints',volume:'Volume',
+    cameraHintLabel:'Camera hint before each start',
+    replayOnboard:'🎬 Show welcome again',
+    saveSet:'💾 Save set',historyBtn:'📜 History',exportCSV:'📤 CSV',clearBtn:'🗑️ Clear',
+    startStep:'▶️ Start step',nextStep:'⏭️ Next',startHiit:'⚡ Start HIIT',startTimer:'▶️ Start',
+    sessTime:'Time',sessReps:'Reps',sessCal:'Calories',sessStreak:'Streak',
+    statCal:'🔥 Calories',statStreak:'⚡ Streak',statRecord:'🏆 Record',
+    totalReps:'Reps',totalCal:'Calories',maxStreak:'Max streak',levelLabel:'Level',
+    chartReps:'📊 Reps',chartTech:'🎯 Technique',
+    shareBtn:'📤 Share',updateApp:'🔄 Update app',
   }
 };
 function t(key){return I18N[currentLang]?.[key]||I18N.ru[key]||key;}
@@ -78,7 +118,10 @@ function applyLanguage(lang){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const key=el.dataset.i18n;
     const val=t(key);
-    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=val;else el.textContent=val;
+    // Если у элемента есть атрибут placeholder — обновляем его, иначе textContent
+    if(el.hasAttribute('placeholder'))el.placeholder=val;
+    else if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=val;
+    else el.textContent=val;
   });
   document.documentElement.lang=currentLang;
   localStorage.setItem('fp_lang',currentLang);
