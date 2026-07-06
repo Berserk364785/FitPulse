@@ -81,6 +81,35 @@ const I18N={
     totalReps:'Повторений',totalCal:'Калорий',maxStreak:'Макс. серия',levelLabel:'Уровень',
     chartReps:'📊 Повторения',chartTech:'🎯 Техника',
     shareBtn:'📤 Поделиться',updateApp:'🔄 Обновить приложение',
+    // меню-хаб
+    hubSettings:'⚙️ Настройки',hubSettingsSub:'Камера, голос, отображение',
+    hubFaq:'❓ Как пользоваться',hubFaqSub:'FAQ и приветствие',
+    hubFeedback:'💬 Обратная связь',hubFeedbackSub:'Отзыв, идея или вопрос',
+    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v3',
+    // community
+    teamDesc:'Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете',
+    createRoom:'Создать',joinRoom:'Войти',shareRoomBtn:'🔗 Поделиться',leaveRoom:'Покинуть команду',
+    inviteDesc:'Получите <strong style="color:var(--primary)">+100 XP</strong>, когда друг по вашей ссылке завершит первую тренировку',
+    lbPrivacy:'🔒 Фото-аватары видны только вам в профиле — в общую таблицу лидеров публикуется эмодзи для приватности',
+    notifDesc:'Используется для уведомления об окончании таймера тренировки.',
+    updateDesc:'Если интерфейс выглядит устаревшим — нажмите кнопку ниже. Это сбросит кэш и загрузит свежую версию.',
+    publishBtn:'🌍 Опубликовать мой результат',
+    // настройки
+    langLabel:'Language / Язык',voiceCoachDiv:'🎙️ Голосовой тренер',
+    calibBtn:'📏 Калибровка',testVoice:'🔊 Проверить голос',
+    // видео
+    videoTitle:'🎥 Видео-анализ',videoWip:'Ещё в разработке',
+    videoWipDesc:'Анализ загруженных видео пока не работает стабильно. Мы дорабатываем эту функцию и оповестим вас, когда она будет готова. Пока используйте режим «📷 Камера» — он полностью рабочий.',
+    // аватар
+    avatarUpload:'Нажмите чтобы загрузить фото',avatarOrEmoji:'— или выберите эмодзи —',
+    // обратная связь
+    feedbackLabel:'Ваш отзыв или идея',feedbackRating:'Оценка',sendFeedback:'📨 Отправить отзыв',
+    feedbackNote:'Отзывы сохраняются и помогают делать FitPulse лучше',
+    contactDirect:'📬 Связаться напрямую',
+    contactDesc:'Есть идея для приложения или нашли баг? Напишите на почту проекта:',
+    contactEmail:'✉️ Написать на почту',
+    // прочее
+    allExercises:'📋 Все упражнения',
   },
   en:{
     appName:'FitPulse',menuTitle:'Menu',tabTrain:'🏋️ Workout',tabProfile:'👤 Profile',tabProgress:'📊 Progress',tabPrograms:'📋 Programs',tabCommunity:'🏆 Leaderboard',
@@ -110,6 +139,35 @@ const I18N={
     totalReps:'Reps',totalCal:'Calories',maxStreak:'Max streak',levelLabel:'Level',
     chartReps:'📊 Reps',chartTech:'🎯 Technique',
     shareBtn:'📤 Share',updateApp:'🔄 Update app',
+    // menu hub
+    hubSettings:'⚙️ Settings',hubSettingsSub:'Camera, voice, display',
+    hubFaq:'❓ How to use',hubFaqSub:'FAQ & welcome',
+    hubFeedback:'💬 Feedback',hubFeedbackSub:'Review, idea or question',
+    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v3',
+    // community
+    teamDesc:'Create a room or join by code — compete with people you know',
+    createRoom:'Create',joinRoom:'Join',shareRoomBtn:'🔗 Share',leaveRoom:'Leave team',
+    inviteDesc:'Get <strong style="color:var(--primary)">+100 XP</strong> when a friend completes their first workout via your link',
+    lbPrivacy:'🔒 Photo avatars are visible only to you — the leaderboard uses emoji for privacy',
+    notifDesc:'Used to notify when your workout timer ends.',
+    updateDesc:'If the interface looks outdated, press the button below to clear cache and load a fresh version.',
+    publishBtn:'🌍 Publish my result',
+    // settings
+    langLabel:'Language / Язык',voiceCoachDiv:'🎙️ Voice Coach',
+    calibBtn:'📏 Calibrate',testVoice:'🔊 Test voice',
+    // video
+    videoTitle:'🎥 Video Analysis',videoWip:'Still in development',
+    videoWipDesc:'Video upload analysis is not yet stable. We are working on it and will notify you when it\'s ready. For now, use 📷 Camera mode — it works fully.',
+    // avatar
+    avatarUpload:'Tap to upload a photo',avatarOrEmoji:'— or choose an emoji —',
+    // feedback
+    feedbackLabel:'Your review or idea',feedbackRating:'Rating',sendFeedback:'📨 Send feedback',
+    feedbackNote:'Reviews are saved and help improve FitPulse',
+    contactDirect:'📬 Contact directly',
+    contactDesc:'Have an idea or found a bug? Email the project:',
+    contactEmail:'✉️ Send email',
+    // misc
+    allExercises:'📋 All exercises',
   }
 };
 function t(key){return I18N[currentLang]?.[key]||I18N.ru[key]||key;}
@@ -136,7 +194,22 @@ function applyLanguage(lang){
   const voiceBtn=q('voiceBtn');if(voiceBtn)voiceBtn.textContent=isEn?'🎙️ Voice':'🎙️ Голос';
   const saveProfileBtn=q('saveProfileBtn');if(saveProfileBtn)saveProfileBtn.textContent=isEn?'💾 Save':'💾 Сохранить';
   const resetAllBtn=q('resetAllBtn');if(resetAllBtn)resetAllBtn.textContent=isEn?'⚠️ Reset all progress':'⚠️ Сбросить весь прогресс';
-  const hubChangelogBtn=q('hubChangelogBtn');if(hubChangelogBtn)hubChangelogBtn.innerHTML=isEn?'✨ What\'s New <span class="menu-hub-sub">Update history v3</span>':'✨ Что нового <span class="menu-hub-sub">История обновлений v3</span>';
+  // Элементы с innerHTML (содержат HTML-теги, нельзя textContent)
+  document.querySelectorAll('[data-i18n="inviteDesc"],[data-i18n="lbPrivacy"]').forEach(el=>{
+    el.innerHTML=t(el.dataset.i18n);
+  });
+  // Перерисовываем динамические блоки
+  buildExGrid();buildMoreExGrid();buildProgsGrid();
+  updateAchUI();updatePRList();updateLvlUI();updateQuestUI();updateChallengeUI();
+  // Обновляем hub-changelog кнопку (содержит span)
+  const hubChangelogBtn=q('hubChangelogBtn');
+  if(hubChangelogBtn)hubChangelogBtn.innerHTML=`${t('hubChangelog')} <span class="menu-hub-sub">${t('hubChangelogSub')}</span>`;
+  const hubSettingsBtn=q('hubSettingsBtn');
+  if(hubSettingsBtn)hubSettingsBtn.innerHTML=`${t('hubSettings')} <span class="menu-hub-sub">${t('hubSettingsSub')}</span>`;
+  const hubFaqBtn=q('hubFaqBtn');
+  if(hubFaqBtn)hubFaqBtn.innerHTML=`${t('hubFaq')} <span class="menu-hub-sub">${t('hubFaqSub')}</span>`;
+  const hubFeedbackBtn=q('hubFeedbackBtn');
+  if(hubFeedbackBtn)hubFeedbackBtn.innerHTML=`${t('hubFeedback')} <span class="menu-hub-sub">${t('hubFeedbackSub')}</span>`;
   // Update speech language
   window._speechLang=isEn?'en-US':'ru-RU';
 }
@@ -145,27 +218,27 @@ function applyLanguage(lang){
 //  EXERCISES
 // ============================================================
 const EX={
-  pushup:{name:'Отжимания',dn:95,up:150,ang:'elbow',cal:.5,xp:10,emoji:'💪',meta:'Грудь, трицепс'},
-  squat:{name:'Приседания',dn:115,up:160,ang:'knee',cal:.7,xp:12,emoji:'🦵',meta:'Квадрицепс, ягодицы'},
-  plank:{name:'Планка',dn:150,up:180,ang:'sha',isPlank:true,calS:.15,xpS:2,emoji:'⏱️',meta:'Кор, пресс'},
-  situp:{name:'Пресс',dn:55,up:85,ang:'trunk',cal:.4,xp:8,emoji:'🔺',meta:'Пресс'},
-  lunge:{name:'Выпады',dn:105,up:160,ang:'knee',cal:.6,xp:10,emoji:'🏃',meta:'Ноги, баланс'},
-  burpee:{name:'Бёрпи',dn:95,up:150,ang:'elbow',cal:1.0,xp:20,emoji:'🤸',meta:'Всё тело'},
-  pullup:{name:'Подтягивания',dn:130,up:50,ang:'elbow',cal:.8,xp:15,emoji:'🧗',meta:'Спина, бицепс'}
+  pushup:{nameRu:'Отжимания',nameEn:'Push-ups',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:95,up:150,ang:'elbow',cal:.5,xp:10,emoji:'💪',metaRu:'Грудь, трицепс',metaEn:'Chest, triceps',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}},
+  squat:{nameRu:'Приседания',nameEn:'Squats',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:115,up:160,ang:'knee',cal:.7,xp:12,emoji:'🦵',metaRu:'Квадрицепс, ягодицы',metaEn:'Quads, glutes',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}},
+  plank:{nameRu:'Планка',nameEn:'Plank',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:150,up:180,ang:'sha',isPlank:true,calS:.15,xpS:2,emoji:'⏱️',metaRu:'Кор, пресс',metaEn:'Core, abs',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}},
+  situp:{nameRu:'Пресс',nameEn:'Sit-ups',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:55,up:85,ang:'trunk',cal:.4,xp:8,emoji:'🔺',metaRu:'Пресс',metaEn:'Abs',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}},
+  lunge:{nameRu:'Выпады',nameEn:'Lunges',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:105,up:160,ang:'knee',cal:.6,xp:10,emoji:'🏃',metaRu:'Ноги, баланс',metaEn:'Legs, balance',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}},
+  burpee:{nameRu:'Бёрпи',nameEn:'Burpees',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:95,up:150,ang:'elbow',cal:1.0,xp:20,emoji:'🤸',metaRu:'Всё тело',metaEn:'Full body',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}},
+  pullup:{nameRu:'Подтягивания',nameEn:'Pull-ups',get name(){return currentLang==='en'?this.nameEn:this.nameRu;},dn:130,up:50,ang:'elbow',cal:.8,xp:15,emoji:'🧗',metaRu:'Спина, бицепс',metaEn:'Back, biceps',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;}}
 };
 
 // ============================================================
 //  PROGRAMS
 // ============================================================
 const PROGS=[
-  {id:'beginner',title:'Начинающий',emoji:'🌱',meta:'7 дней • базовый',steps:[
+  {id:'beginner',titleRu:'Начинающий',titleEn:'Beginner',get title(){return currentLang==='en'?this.titleEn:this.titleRu;},emoji:'🌱',metaRu:'7 дней • базовый',metaEn:'7 days • basic',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;},steps:[
     {ex:'pushup',reps:5,sets:2},{ex:'squat',reps:10,sets:2},{ex:'plank',reps:20,sets:2},
     {ex:'pushup',reps:8,sets:3},{ex:'squat',reps:15,sets:3},{ex:'situp',reps:10,sets:2}]},
-  {id:'strength',title:'Сила',emoji:'💪',meta:'5 дней • интенсивный',steps:[
+  {id:'strength',titleRu:'Сила',titleEn:'Strength',get title(){return currentLang==='en'?this.titleEn:this.titleRu;},emoji:'💪',metaRu:'5 дней • интенсивный',metaEn:'5 days • intense',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;},steps:[
     {ex:'pushup',reps:15,sets:4},{ex:'pullup',reps:5,sets:3},{ex:'squat',reps:20,sets:4},{ex:'lunge',reps:12,sets:3}]},
-  {id:'cardio',title:'Кардио',emoji:'🏃',meta:'4 дня • сжигание',steps:[
+  {id:'cardio',titleRu:'Кардио',titleEn:'Cardio',get title(){return currentLang==='en'?this.titleEn:this.titleRu;},emoji:'🏃',metaRu:'4 дня • сжигание',metaEn:'4 days • burn',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;},steps:[
     {ex:'burpee',reps:10,sets:3},{ex:'squat',reps:20,sets:3},{ex:'lunge',reps:15,sets:3}]},
-  {id:'core',title:'Кор & Пресс',emoji:'🔥',meta:'6 дней • пресс',steps:[
+  {id:'core',titleRu:'Кор & Пресс',titleEn:'Core & Abs',get title(){return currentLang==='en'?this.titleEn:this.titleRu;},emoji:'🔥',metaRu:'6 дней • пресс',metaEn:'6 days • abs',get meta(){return currentLang==='en'?this.metaEn:this.metaRu;},steps:[
     {ex:'plank',reps:30,sets:3},{ex:'situp',reps:20,sets:4},{ex:'lunge',reps:15,sets:3}]}
 ];
 
@@ -232,7 +305,7 @@ function updateLvlUI(){
   q('xpFill').style.width=pct+'%';
   q('xpCur').textContent=xp;q('xpNext').textContent=need;
   q('psLevel').textContent=lvl;
-  q('profileTitle').textContent=`Уровень ${lvl} • ${lvlTitle()}`;
+  q('profileTitle').textContent=`${currentLang==='en'?'Level':'Уровень'} ${lvl} • ${lvlTitle()}`;
   q('profileName').textContent=userName;
   q('psTotalReps').textContent=totalVolume;
   q('psTotalCal').textContent=Math.floor(caloriesBurned);
@@ -240,10 +313,17 @@ function updateLvlUI(){
   const eff=q('xpEfficiency');
   if(eff){
     const pctEff=Math.round(levelXpMultiplier()*100);
-    eff.textContent=pctEff>=100?'⚡ Базовый XP за упражнение: 100%':`⚡ Базовый XP за упражнение: ${pctEff}% — чередуйте упражнения для бонуса`;
+    eff.textContent=currentLang==='en'
+      ?(pctEff>=100?'⚡ Base XP per exercise: 100%':`⚡ Base XP: ${pctEff}% — vary exercises for bonus`)
+      :(pctEff>=100?'⚡ Базовый XP за упражнение: 100%':`⚡ Базовый XP за упражнение: ${pctEff}% — чередуйте упражнения для бонуса`);
   }
 }
-function lvlTitle(){const t=['Новичок','Атлет','Боец','Чемпион','Легенда'];return t[Math.min(Math.floor(lvl/2),t.length-1)];}
+function lvlTitle(){
+  const ru=['Новичок','Атлет','Боец','Чемпион','Легенда'];
+  const en=['Beginner','Athlete','Fighter','Champion','Legend'];
+  const arr=currentLang==='en'?en:ru;
+  return arr[Math.min(Math.floor(lvl/2),arr.length-1)];
+}
 function updateProfileUI(){updateLvlUI();}
 
 // ============================================================
@@ -301,7 +381,7 @@ async function showHistory(){
   const el=q('histList');if(!el)return;
   const card=q('historyCard');
   if(!h.length){el.innerHTML='<p style="opacity:.5;font-size:.85rem">История пуста</p>';}
-  else el.innerHTML=h.map(r=>`<div class="hist-item"><div class="hist-date">${r.date||''}</div><div class="hist-main">${EX[r.exercise]?.emoji||''} ${r.exName||r.exercise}: ${r.reps} повт.</div><div class="hist-sub">🔥 ${r.calories||0} кал</div></div>`).join('');
+  else el.innerHTML=h.map(r=>`<div class="hist-item"><div class="hist-date">${r.date||''}</div><div class="hist-main">${EX[r.exercise]?.emoji||''} ${r.exName||r.exercise}: ${r.reps} ${currentLang==='en'?'reps':'повт.'}</div><div class="hist-sub">🔥 ${r.calories||0} ${currentLang==='en'?'cal':'кал'}</div></div>`).join('');
   card.style.display='block';card.scrollIntoView({behavior:'smooth'});
 }
 async function exportCSV(){
@@ -397,33 +477,34 @@ function buildChartTabs(){
 //  ACHIEVEMENTS
 // ============================================================
 const ACH=[
-  {k:'first',n:'Первое повторение',e:'🎯',c:()=>repCount>=1},
-  {k:'ten',n:'10 за подход',e:'💪',c:()=>repCount>=10},
-  {k:'fifty',n:'50 всего',e:'🔥',c:()=>totalVolume>=50},
-  {k:'hundred',n:'100 всего',e:'💯',c:()=>totalVolume>=100},
-  {k:'fiveHundred',n:'500 всего',e:'🏆',c:()=>totalVolume>=500},
-  {k:'plankMaster',n:'Планка 60с',e:'⏱️',c:()=>plankTime>=60},
-  {k:'streak10',n:'Серия 10',e:'⚡',c:()=>streak>=10},
-  {k:'streak20',n:'Серия 20',e:'🌟',c:()=>streak>=20},
-  {k:'cal100',n:'100 калорий',e:'🔥',c:()=>caloriesBurned>=100},
-  {k:'lvl5',n:'Уровень 5',e:'⭐',c:()=>lvl>=5},
-  {k:'lvl10',n:'Уровень 10',e:'🌠',c:()=>lvl>=10},
-  {k:'variety',n:'5 упражнений',e:'🎭',c:()=>Object.keys(prRecords).length>=5},
+  {k:'first',  ru:'Первое повторение', en:'First rep',       e:'🎯',c:()=>repCount>=1},
+  {k:'ten',    ru:'10 за подход',      en:'10 in a set',     e:'💪',c:()=>repCount>=10},
+  {k:'fifty',  ru:'50 всего',          en:'50 total',        e:'🔥',c:()=>totalVolume>=50},
+  {k:'hundred',ru:'100 всего',         en:'100 total',       e:'💯',c:()=>totalVolume>=100},
+  {k:'fiveHundred',ru:'500 всего',     en:'500 total',       e:'🏆',c:()=>totalVolume>=500},
+  {k:'plankMaster',ru:'Планка 60с',    en:'Plank 60s',       e:'⏱️',c:()=>plankTime>=60},
+  {k:'streak10',ru:'Серия 10',         en:'Streak 10',       e:'⚡',c:()=>streak>=10},
+  {k:'streak20',ru:'Серия 20',         en:'Streak 20',       e:'🌟',c:()=>streak>=20},
+  {k:'cal100', ru:'100 калорий',       en:'100 calories',    e:'🔥',c:()=>caloriesBurned>=100},
+  {k:'lvl5',   ru:'Уровень 5',         en:'Level 5',         e:'⭐',c:()=>lvl>=5},
+  {k:'lvl10',  ru:'Уровень 10',        en:'Level 10',        e:'🌠',c:()=>lvl>=10},
+  {k:'variety',ru:'5 упражнений',      en:'5 exercises',     e:'🎭',c:()=>Object.keys(prRecords).length>=5},
 ];
+function achName(a){return currentLang==='en'?a.en:a.ru;}
 function checkAch(){
   let nu=false;
-  ACH.forEach(a=>{if(!achievements[a.k]&&a.c()){achievements[a.k]=true;speak(`Ачивка: ${a.n}`);bAch();confetti(1500);toast(`🏅 ${a.n}`);nu=true;}});
+  ACH.forEach(a=>{if(!achievements[a.k]&&a.c()){achievements[a.k]=true;speak(`${currentLang==='en'?'Achievement':'Ачивка'}: ${achName(a)}`);bAch();confetti(1500);toast(`🏅 ${achName(a)}`);nu=true;}});
   if(nu){updateAchUI();save();}
 }
 function updateAchUI(){
   const el=q('achGrid');if(!el)return;
-  el.innerHTML=ACH.map(a=>`<div class="ach-badge${achievements[a.k]?' unlocked':''}" title="${a.n}"><span>${a.e}</span><span class="${achievements[a.k]?'':'lock'}">${a.n}</span></div>`).join('');
+  el.innerHTML=ACH.map(a=>`<div class="ach-badge${achievements[a.k]?' unlocked':''}" title="${achName(a)}"><span>${a.e}</span><span class="${achievements[a.k]?'':'lock'}">${achName(a)}</span></div>`).join('');
 }
 function updatePRList(){
   const el=q('prList');if(!el)return;
   const keys=Object.keys(prRecords);
   if(!keys.length){el.innerHTML='<p style="opacity:.5;font-size:.84rem">Нет рекордов</p>';return;}
-  el.innerHTML=keys.map(k=>`<div class="pr-row"><span>${EX[k]?.emoji||''} ${EX[k]?.name||k}</span><span class="pr-val">${prRecords[k]} повт.</span></div>`).join('');
+  el.innerHTML=keys.map(k=>`<div class="pr-row"><span>${EX[k]?.emoji||''} ${EX[k]?.name||k}</span><span class="pr-val">${prRecords[k]} ${currentLang==='en'?'reps':'повт.'}</span></div>`).join('');
   q('prStat').textContent=Math.max(...Object.values(prRecords),0);
 }
 
@@ -1057,7 +1138,7 @@ function selectProg(id){
   renderSteps();q('progsGrid').querySelectorAll('.prog-card').forEach(c=>c.classList.toggle('sel',c.dataset.pid===id));
 }
 function renderSteps(){
-  q('progStepsList').innerHTML=activeProg.steps.map((s,i)=>`<div class="step-row${i===progIdx?' cur':i<progIdx?' done':''}"><span>${EX[s.ex].emoji}</span><span>${EX[s.ex].name} — ${s.reps} × ${s.sets} подх.</span></div>`).join('');
+  q('progStepsList').innerHTML=activeProg.steps.map((s,i)=>`<div class="step-row${i===progIdx?' cur':i<progIdx?' done':''}"><span>${EX[s.ex].emoji}</span><span>${EX[s.ex].name} — ${s.reps} × ${s.sets} ${currentLang==='en'?'sets':'подх.'}</span></div>`).join('');
 }
 function startProgStep(){
   if(!activeProg)return;
@@ -1350,7 +1431,7 @@ async function refreshTeamRoomUI(){
     <div class="lb-rank">${medals[i]||(i+1)}</div>
     <div class="lb-av">${m.device_id===myId?'🫵':'🏃'}</div>
     <div class="lb-name">${m.display_name}${m.device_id===myId?' (Вы)':''}</div>
-    <div class="lb-score">${m.progress} повт.</div>
+    <div class="lb-score">${m.progress} ${currentLang==='en'?'reps':'повт.'}</div>
   </div>`).join('');
 }
 async function createTeamRoom(){

@@ -209,7 +209,7 @@
         <button class="btn-sec" id="pauseBtn" disabled>⏸️ Пауза</button>
         <button class="btn-sec" id="stopBtn" disabled>⏹️ Стоп</button>
         <button class="btn-sec" id="hiitBtn">⚡ HIIT</button>
-        <button class="btn-sec" id="timerBtn">⏱️ Таймер</button>
+        <button class="btn-sec" id="timerBtn" data-i18n="btnTimer">⏱️ Таймер</button>
         <button class="btn-sec" id="voiceBtn">🎙️ Голос</button>
       </div>
     </div>
@@ -332,14 +332,14 @@
     <div class="card team-room-card" id="teamRoomCard">
       <div class="card-title" data-i18n="teamFriends">👥 Команда друзей</div>
       <div class="team-room-empty">
-        <div style="font-size:.85rem;color:var(--text2);margin-bottom:10px">Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете</div>
+        <div style="font-size:.85rem;color:var(--text2);margin-bottom:10px" data-i18n="teamDesc">Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете</div>
         <div class="field-row" style="margin-bottom:8px">
           <input type="text" id="newRoomName" class="inp" style="flex:1;text-align:left" placeholder="Название команды" data-i18n="roomNamePh" maxlength="40">
-          <button class="m-btn" id="createRoomBtn" style="width:auto;padding:10px 16px">Создать</button>
+          <button class="m-btn" id="createRoomBtn" style="width:auto;padding:10px 16px" data-i18n="createRoom">Создать</button>
         </div>
         <div class="field-row">
           <input type="text" id="joinRoomCode" class="inp" style="flex:1;text-align:left;text-transform:uppercase" placeholder="Код комнаты" data-i18n="roomCodePh" maxlength="6">
-          <button class="m-btn ghost" id="joinRoomBtn" style="width:auto;padding:10px 16px">Войти</button>
+          <button class="m-btn ghost" id="joinRoomBtn" style="width:auto;padding:10px 16px" data-i18n="joinRoom">Войти</button>
         </div>
       </div>
       <div class="team-room-active" style="display:none">
@@ -348,27 +348,27 @@
             <div class="team-room-name" id="teamRoomName">—</div>
             <div class="team-room-code-label">Код: <strong id="teamRoomCode">—</strong></div>
           </div>
-          <button class="m-btn ghost" id="shareRoomBtn" style="width:auto;padding:8px 12px">🔗 Поделиться</button>
+          <button class="m-btn ghost" id="shareRoomBtn" style="width:auto;padding:8px 12px" data-i18n="shareRoomBtn">🔗 Поделиться</button>
         </div>
         <div id="teamRoomMembers"></div>
-        <button class="m-btn ghost" id="leaveRoomBtn" style="margin-top:10px">Покинуть команду</button>
+        <button class="m-btn ghost" id="leaveRoomBtn" style="margin-top:10px" data-i18n="leaveRoom">Покинуть команду</button>
       </div>
     </div>
     <div class="card referral-card">
       <div class="card-title" data-i18n="inviteTitle">🎁 Пригласи друга</div>
-      <div style="font-size:.85rem;color:var(--text2);margin-bottom:10px">Получите <strong style="color:var(--primary)">+100 XP</strong>, когда друг по вашей ссылке завершит первую тренировку</div>
+      <div style="font-size:.85rem;color:var(--text2);margin-bottom:10px" data-i18n="inviteDesc">Получите <strong style="color:var(--primary)">+100 XP</strong>, когда друг по вашей ссылке завершит первую тренировку</div>
       <button class="m-btn" id="inviteFriendBtn"data-i18n="btnInvite">🔗 Поделиться ссылкой</button>
     </div>
     <div class="card">
       <div class="card-title" data-i18n="leaderboardTitle">🏆 Таблица лидеров</div>
       <div id="lbList"></div>
-      <button class="m-btn ghost" id="publishNowBtn" style="margin-top:10px"data-i18n="publishBtn">🌍 Опубликовать мой результат</button>
-      <div class="lb-privacy-note">🔒 Фото-аватары видны только вам в профиле — в общую таблицу лидеров публикуется эмодзи для приватности</div>
+      <button class="m-btn ghost" id="publishNowBtn" style="margin-top:10px"data-i18n="publishBtn" data-i18n="publishBtn">🌍 Опубликовать мой результат</button>
+      <div class="lb-privacy-note" data-i18n="lbPrivacy">🔒 Фото-аватары видны только вам в профиле — в общую таблицу лидеров публикуется эмодзи для приватности</div>
     </div>
     <div class="card">
       <div class="card-title" data-i18n="notificationsTitle">🔔 Уведомления</div>
       <button class="m-btn" id="notifBtn"data-i18n="notifBtn">🔔 Разрешить уведомления</button>
-      <div style="font-size:.76rem;color:var(--text2);margin-top:8px;">Используется для уведомления об окончании таймера тренировки.</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-top:8px;" data-i18n="notifDesc">Используется для уведомления об окончании таймера тренировки.</div>
     </div>
     <div class="card">
       <div class="card-title" data-i18n="shareResult">📤 Поделиться результатом</div>
@@ -377,7 +377,7 @@
     </div>
     <div class="card">
       <div class="card-title" data-i18n="appUpdate">🔄 Обновление приложения</div>
-      <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px">Если интерфейс выглядит устаревшим — нажмите кнопку ниже. Это сбросит кэш и загрузит свежую версию.</div>
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px" data-i18n="updateDesc">Если интерфейс выглядит устаревшим — нажмите кнопку ниже. Это сбросит кэш и загрузит свежую версию.</div>
       <button class="m-btn ghost" id="forceUpdateBtn"data-i18n="updateApp">🔄 Обновить приложение</button>
     </div>
   </div>
@@ -405,10 +405,10 @@
   <div class="modal-box">
     <div class="modal-head"><h3>Меню</h3><button class="modal-close" data-close="menuHubModal">✕</button></div>
     <div class="modal-body">
-      <button class="m-btn ghost menu-hub-item" id="hubSettingsBtn">⚙️ Настройки <span class="menu-hub-sub">Камера, голос, отображение</span></button>
-      <button class="m-btn ghost menu-hub-item" id="hubFaqBtn">❓ Как пользоваться <span class="menu-hub-sub">FAQ и приветствие</span></button>
-      <button class="m-btn ghost menu-hub-item" id="hubFeedbackBtn">💬 Обратная связь <span class="menu-hub-sub">Отзыв, идея или вопрос</span></button>
-      <button class="m-btn ghost menu-hub-item" id="hubChangelogBtn">✨ Что нового <span class="menu-hub-sub">История обновлений v3</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubSettingsBtn" id="hubSettingsBtnText">⚙️ Настройки <span class="menu-hub-sub" data-i18n="hubSettingsSub">Камера, голос, отображение</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubFaqBtn" data-i18n="hubFaq">❓ Как пользоваться <span class="menu-hub-sub" data-i18n="hubFaqSub">FAQ и приветствие</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubFeedbackBtn" data-i18n="hubFeedback">💬 Обратная связь <span class="menu-hub-sub" data-i18n="hubFeedbackSub">Отзыв, идея или вопрос</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubChangelogBtn" data-i18n="hubChangelog">✨ Что нового <span class="menu-hub-sub" data-i18n="hubChangelogSub">История обновлений v3</span></button>
     </div>
   </div>
 </div>
@@ -417,7 +417,7 @@
   <div class="modal-box">
     <div class="modal-head"><button class="modal-close" id="settingsBackBtn" title="Назад">←</button><h3 data-i18n="settingsTitle">⚙️ Настройки</h3><button class="modal-close" data-close="settingsModal">✕</button></div>
     <div class="modal-body">
-      <div class="field-row"><label>Language / Язык</label>
+      <div class="field-row"><label data-i18n="langLabel">Language / Язык</label>
         <div style="display:flex;gap:6px">
           <button class="lang-btn active" data-lang="ru">RU</button>
           <button class="lang-btn" data-lang="en">EN</button>
@@ -429,20 +429,20 @@
       <div class="field-row"><label>Чувствительность: <span id="sensVal">1.00</span></label>
         <input type="range" id="sensRange" min="0.8" max="1.2" step="0.02" value="1" style="width:110px">
       </div>
-      <button class="m-btn ghost" id="calibBtn">📏 Калибровка</button>
+      <button class="m-btn ghost" id="calibBtn" data-i18n="calibBtn">📏 Калибровка</button>
 
-      <div class="settings-divider">🎙️ Голосовой тренер</div>
+      <div class="settings-divider" data-i18n="voiceCoachDiv">🎙️ Голосовой тренер</div>
       <div class="field-row">
         <label data-i18n="voiceHints">Голосовые подсказки</label>
         <input type="checkbox" id="voiceToggle" checked style="width:20px;height:20px">
       </div>
-      <div class="field-row"><label>Скорость речи: <span id="voiceRateVal">1.0x</span></label>
+      <div class="field-row"><label data-i18n-prefix="voiceRate">Скорость речи: <span id="voiceRateVal">1.0x</span></label>
         <input type="range" id="voiceRateRange" min="0.7" max="1.4" step="0.1" value="1" style="width:110px">
       </div>
       <div class="field-row"><label data-i18n="volume">Громкость</label>
         <input type="range" id="voiceVolRange" min="0" max="1" step="0.1" value="0.85" style="width:110px">
       </div>
-      <button class="m-btn ghost" id="testVoiceBtn">🔊 Проверить голос</button>
+      <button class="m-btn ghost" id="testVoiceBtn" data-i18n="testVoice">🔊 Проверить голос</button>
       <div class="field-row">
         <label data-i18n="cameraHintLabel">Подсказка по камере перед каждым стартом</label>
         <input type="checkbox" id="alwaysHintToggle" style="width:20px;height:20px">
@@ -504,20 +504,20 @@
     <div class="modal-head"><button class="modal-close" id="feedbackBackBtn" title="Назад">←</button><h3>💬 Обратная связь</h3><button class="modal-close" data-close="feedbackModal">✕</button></div>
     <div class="modal-body">
       <div class="field-row" style="display:block">
-        <label style="display:block;margin-bottom:6px">Ваш отзыв или идея</label>
+        <label style="display:block;margin-bottom:6px" data-i18n="feedbackLabel">Ваш отзыв или идея</label>
         <textarea id="feedbackText" class="inp" style="width:100%;min-height:100px;text-align:left;resize:vertical;font-family:inherit" placeholder="Расскажите, что понравилось или что улучшить..."></textarea>
       </div>
       <div class="field-row">
-        <label>Оценка</label>
+        <label data-i18n="feedbackRating">Оценка</label>
         <div id="feedbackStars" class="feedback-stars">
           <span data-star="1">⭐</span><span data-star="2">⭐</span><span data-star="3">⭐</span><span data-star="4">⭐</span><span data-star="5">⭐</span>
         </div>
       </div>
-      <button class="m-btn" id="sendFeedbackBtn">📨 Отправить отзыв</button>
-      <div style="font-size:.74rem;color:var(--text2);text-align:center;margin-top:4px">Отзывы сохраняются и помогают делать FitPulse лучше</div>
-      <div class="settings-divider">📬 Связаться напрямую</div>
-      <div style="font-size:.84rem;color:var(--text2);margin-bottom:8px">Есть идея для приложения или нашли баг? Напишите на почту проекта:</div>
-      <a class="m-btn ghost" id="contactEmailBtn" href="mailto:" style="text-decoration:none;text-align:center;display:block">✉️ Написать на почту</a>
+      <button class="m-btn" id="sendFeedbackBtn" data-i18n="sendFeedback">📨 Отправить отзыв</button>
+      <div style="font-size:.74rem;color:var(--text2);text-align:center;margin-top:4px" data-i18n="feedbackNote">Отзывы сохраняются и помогают делать FitPulse лучше</div>
+      <div class="settings-divider" data-i18n="contactDirect">📬 Связаться напрямую</div>
+      <div style="font-size:.84rem;color:var(--text2);margin-bottom:8px" data-i18n="contactDesc">Есть идея для приложения или нашли баг? Напишите на почту проекта:</div>
+      <a class="m-btn ghost" id="contactEmailBtn" href="mailto:" style="text-decoration:none;text-align:center;display:block" data-i18n="contactEmail">✉️ Написать на почту</a>
     </div>
   </div>
 </div>
@@ -527,10 +527,10 @@
     <div class="modal-body">
       <div class="avatar-upload-area" onclick="document.getElementById('avatarFileIn').click()">
         <div class="av-big" id="avBigPreview">🏆</div>
-        <div style="font-size:.85rem;color:var(--text2)">Нажмите чтобы загрузить фото</div>
+        <div style="font-size:.85rem;color:var(--text2)" data-i18n="avatarUpload">Нажмите чтобы загрузить фото</div>
         <input type="file" id="avatarFileIn" accept="image/*">
       </div>
-      <div style="font-size:.82rem;color:var(--text2);margin-top:4px;text-align:center">— или выберите эмодзи —</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-top:4px;text-align:center" data-i18n="avatarOrEmoji">— или выберите эмодзи —</div>
       <div class="emoji-grid" id="emojiGrid"></div>
     </div>
   </div>
@@ -538,7 +538,7 @@
 
 <div class="modal-ov" id="moreExModal">
   <div class="modal-box">
-    <div class="modal-head"><h3>📋 Все упражнения</h3><button class="modal-close" data-close="moreExModal">✕</button></div>
+    <div class="modal-head"><h3 data-i18n="allExercises">📋 Все упражнения</h3><button class="modal-close" data-close="moreExModal">✕</button></div>
     <div class="modal-body">
       <div class="exercises-grid" id="moreExGrid"></div>
     </div>
@@ -547,11 +547,11 @@
 
 <div class="modal-ov" id="videoSoonModal">
   <div class="modal-box">
-    <div class="modal-head"><h3>🎥 Видео-анализ</h3><button class="modal-close" data-close="videoSoonModal">✕</button></div>
+    <div class="modal-head"><h3 data-i18n="videoTitle">🎥 Видео-анализ</h3><button class="modal-close" data-close="videoSoonModal">✕</button></div>
     <div class="modal-body" style="text-align:center;padding:30px 16px;">
       <div style="font-size:3rem;margin-bottom:14px;">🚧</div>
-      <div style="font-size:1.05rem;font-weight:700;margin-bottom:8px;">Ещё в разработке</div>
-      <div style="font-size:.88rem;color:var(--text2);line-height:1.6;">Анализ загруженных видео пока не работает стабильно. Мы дорабатываем эту функцию и оповестим вас, когда она будет готова. Пока используйте режим «📷 Камера» — он полностью рабочий.</div>
+      <div style="font-size:1.05rem;font-weight:700;margin-bottom:8px;" data-i18n="videoWip">Ещё в разработке</div>
+      <div style="font-size:.88rem;color:var(--text2);line-height:1.6;" data-i18n="videoWipDesc">Анализ загруженных видео пока не работает стабильно. Мы дорабатываем эту функцию и оповестим вас, когда она будет готова. Пока используйте режим «📷 Камера» — он полностью рабочий.</div>
     </div>
   </div>
 </div>
