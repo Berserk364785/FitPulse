@@ -366,3 +366,20 @@ body::after{width:500px;height:500px;background:radial-gradient(circle,rgba(168,
 
 /* NEW violet-neon theme */
 .theme-neonviolet{--primary:#c026d3;--secondary:#7c3aed;--accent:#22d3ee;--bg:#0a0014;--bg2:#110020;--card:rgba(25,5,50,0.9);--card2:rgba(35,8,65,0.75);--text:#f5e8ff;--text2:rgba(245,232,255,0.55);--border:rgba(192,38,211,0.25);--glow:rgba(192,38,211,0.45);}
+
+/* ============================================================
+   XP FLOAT + LEVEL-UP + COMBO ANIMATIONS
+   ============================================================ */
+@keyframes xpFloat{
+  0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+  60%{opacity:1;transform:translateX(-50%) translateY(-40px) scale(1.15)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-70px) scale(.9)}
+}
+@keyframes lvlBounce{
+  0%{transform:scale(.3);opacity:0}
+  60%{transform:scale(1.3)}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes fadeInFast{from{opacity:0}to{opacity:1}}
+@keyframes fadeOutFast{from{opacity:1}to{opacity:0}}
+

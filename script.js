@@ -286,16 +286,16 @@ function load(){
 //  XP / LEVEL
 // ============================================================
 function addXP(a){
-  a=Math.round(a); // XP всегда целое число — независимо от источника (например, планка считает дробные секунды)
+  a=Math.round(a);
   if(a<=0)return;
   xp=Math.round(xp+a);let need=lvl*100,leveled=false;
   while(xp>=need){
     xp=Math.round(xp-need);lvl++;need=lvl*100;leveled=true;
-    speak(`Уровень ${lvl}!`,'!');bLvl();confetti(2500);toast(`🎉 Уровень ${lvl}!`);
-    // На уровне 5 объясняем механику: чем выше уровень, тем меньше XP за одно и то же
-    // упражнение в номинале — стимул чередовать упражнения, а не качать одно бесконечно.
+    speak(currentLang==='en'?`Level ${lvl}!`:`Уровень ${lvl}!`,'!');
+    bLvl();confetti(2500);
+    showLevelUpScreen(lvl);
     if(lvl===5){
-      setTimeout(()=>{speak('На высоких уровнях опыт за одно и то же упражнение становится меньше. Чередуйте упражнения для максимального прогресса','coach');toast('💡 Меняйте упражнения для максимального XP');},2500);
+      setTimeout(()=>{speak(currentLang==='en'?'At higher levels, XP per exercise decreases. Vary your exercises for max progress!':'На высоких уровнях опыт за одно и то же упражнение становится меньше. Чередуйте упражнения для максимального прогресса','coach');toast('💡 Меняйте упражнения для максимального XP');},2500);
     }
   }
   updateLvlUI();if(leveled){save();publishToCloud(true);}
@@ -687,10 +687,20 @@ function addRep(){
   repCount++;
   const bn=q('bigNum');bn.textContent=repCount;bn.classList.add('counter-pulse');setTimeout(()=>bn.classList.remove('counter-pulse'),220);
   beep(600,.08);
-  if(repCount%5===0)speak(`${repCount}`);
+  // Комбо
+  tickCombo();
+  const comboMult=getComboMult();
+  // Milestone голос (заменяет простой speak(`${repCount}`) каждые 5)
+  if(COACH_LINES[currentLang]?.milestones[repCount]){
+    speakCoachLine('milestone',repCount);
+  } else if(repCount%5===0){
+    speak(`${repCount}`);
+  }
   trackVariety();
-  const mult=varietyMultiplier()*levelXpMultiplier();
-  addXP(e.xp*mult);
+  const mult=varietyMultiplier()*levelXpMultiplier()*comboMult;
+  const gained=e.xp*mult;
+  addXP(gained);
+  showXpPop(gained);
   if(mult<1&&mult<=VARIETY_FLOOR+0.05&&sameExStreak%10===0){
     speak('Попробуйте другое упражнение — опыт за повторы снижается','coach');
     toast('📉 Опыт снижен — смените упражнение для полного XP');
@@ -703,9 +713,9 @@ function addRep(){
     const diff=repCount-prevRecord;
     prRecords[currentEx]=repCount;
     if(prevRecord===0){
-      speak('Новый рекорд!','!');toast('🏆 Первый личный рекорд!');
+      speakCoachLine('newRecord');toast('🏆 Первый личный рекорд!');
     }else{
-      speak(`Новый рекорд! На ${diff} больше прошлого!`,'!');
+      speakCoachLine('recordBeaten',diff);
       toast(`🏆 Рекорд! ${repCount} — это на ${diff} больше прошлых ${prevRecord}`,3500);
     }
     bSuccess();confetti(2000);save();updatePRList();
@@ -783,7 +793,7 @@ function updProgress(){
   const cur=e.isPlank?plankTime:repCount;
   q('progBar').style.width=Math.min(100,(cur/goalReps)*100)+'%';
   q('progLabel').textContent=e.isPlank?`${Math.floor(plankTime)} / ${goalReps} сек`:`${repCount} / ${goalReps}`;
-  if(goalReps>0&&cur>=goalReps&&!goalAchieved&&cur>0){goalAchieved=true;speak('Цель достигнута!','!');bSuccess();confetti(2000);}
+  if(goalReps>0&&cur>=goalReps&&!goalAchieved&&cur>0){goalAchieved=true;speakCoachLine('goalDone');bSuccess();confetti(2000);}
 }
 
 // ============================================================
@@ -970,7 +980,10 @@ async function startCam(){
     await cam.start();
     const setSz=()=>{if(vid.videoWidth){const cv=q('canvas');cv.width=vid.videoWidth;cv.height=vid.videoHeight;}else requestAnimationFrame(setSz);};setSz();
     isRunning=true;isPaused=false;setCtrl(true);startSes();startChallenge();hintFor(currentEx);
-    q('debugLine').textContent='Камера активна';toast('📷 Камера готова');speak('Камера готова');
+    q('debugLine').textContent='Камера активна';toast('📷 Камера готова');
+    speak(currentLang==='en'?'Camera ready! Let\'s go!':'Камера готова! Погнали!');
+    setTimeout(()=>speakCoachLine('start'),1200);
+    startEncourageLoop();
   }catch(e){toast('⚠️ '+e.message,5000);q('debugLine').textContent='Ошибка: '+e.message;}
 }
 async function startVid(){
@@ -1084,7 +1097,11 @@ function stopAll(){
   stuckSinceTs=null;lowVisibilityStreak=0;
   setCtrl(false);
   const didWork=repCount>0||plankTime>0;
-  if(didWork){saveSet(true);updateDayStreak();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();toast('✅ Тренировка сохранена');publishToCloud(true);}else toast('Стоп');
+  if(didWork){
+    speakCoachLine('finish');
+    saveSet(true);updateDayStreak();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();toast('✅ Тренировка сохранена');publishToCloud(true);
+  }else toast('Стоп');
+  comboCount=0;hideComboUI();stopEncourageLoop();
   stopHiit();
 }
 function pauseAll(){
@@ -1633,8 +1650,171 @@ setInterval(()=>{
   if(speakBusy&&!speechSynthesis.speaking&&!speechSynthesis.pending){speakBusy=false;pumpSpeakQueue();}
 },5000);
 // ============================================================
-//  TECHNIQUE COACH — детальные аудио-подсказки по углам
+//  COMBO MULTIPLIER — серия быстрых повторений
 // ============================================================
+let comboCount=0,comboTimer=null,lastRepTs=0;
+const COMBO_WINDOW=3500; // мс между повторами чтобы комбо продолжалось
+const COMBO_THRESHOLDS=[
+  {n:5, mult:1.2, label:'x1.2', color:'#a78bfa'},
+  {n:10,mult:1.5, label:'x1.5', color:'#f59e0b'},
+  {n:20,mult:2.0, label:'x2.0 🔥',color:'#ef4444'},
+];
+function getComboMult(){
+  let m=1;
+  for(const t of COMBO_THRESHOLDS)if(comboCount>=t.n)m=t.mult;
+  return m;
+}
+function getComboLabel(){
+  let l=null,c=null;
+  for(const t of COMBO_THRESHOLDS)if(comboCount>=t.n){l=t.label;c=t.color;}
+  return {label:l,color:c};
+}
+function tickCombo(){
+  comboCount++;
+  clearTimeout(comboTimer);
+  comboTimer=setTimeout(()=>{comboCount=0;hideComboUI();},COMBO_WINDOW);
+  updateComboUI();
+}
+function updateComboUI(){
+  let el=document.getElementById('comboDisplay');
+  if(!el){
+    el=document.createElement('div');el.id='comboDisplay';
+    el.style.cssText='position:fixed;top:72px;right:14px;font-size:1.05rem;font-weight:700;padding:6px 14px;border-radius:20px;z-index:900;pointer-events:none;transition:all .3s;opacity:0;transform:scale(.8)';
+    document.body.appendChild(el);
+  }
+  const {label,color}=getComboLabel();
+  if(!label){hideComboUI();return;}
+  el.textContent=`COMBO ${label}`;
+  el.style.background=color;el.style.color='#fff';el.style.opacity='1';el.style.transform='scale(1)';
+  if(comboCount===5)speakCoachLine('comboStart');
+  if(comboCount===10)speakCoachLine('combo10');
+  if(comboCount===20){speakCoachLine('combo20');confetti(1000);}
+}
+function hideComboUI(){
+  const el=document.getElementById('comboDisplay');
+  if(el){el.style.opacity='0';el.style.transform='scale(.8)';}
+}
+
+// ============================================================
+//  XP FLOAT POPUP — летящий +XP при каждом повторе
+// ============================================================
+function showXpPop(amount){
+  const pop=document.createElement('div');
+  const combo=getComboLabel();
+  pop.textContent=`+${Math.round(amount)} XP${combo.label?' '+combo.label:''}`;
+  pop.style.cssText=`position:fixed;bottom:38%;left:50%;transform:translateX(-50%);font-size:1.1rem;font-weight:800;color:${combo.color||'#a78bfa'};pointer-events:none;z-index:999;animation:xpFloat .9s ease-out forwards;text-shadow:0 0 10px ${combo.color||'#a78bfa'}88`;
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(),950);
+}
+
+// ============================================================
+//  LEVEL-UP OVERLAY — полноэкранный момент триумфа
+// ============================================================
+function showLevelUpScreen(newLvl){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,5,25,.92);animation:fadeInFast .3s ease';
+  ov.innerHTML=`
+    <div style="font-size:4rem;animation:lvlBounce .6s ease">⭐</div>
+    <div style="font-size:2.2rem;font-weight:900;color:#a78bfa;margin:.4rem 0">${currentLang==='en'?'LEVEL UP!':'НОВЫЙ УРОВЕНЬ!'}</div>
+    <div style="font-size:3.5rem;font-weight:900;color:#fff">${newLvl}</div>
+    <div style="font-size:1.1rem;color:#c4b5fd;margin-top:.5rem">${lvlTitle()}</div>
+    <div style="margin-top:1.6rem;font-size:.9rem;color:#7c3aed;cursor:pointer;padding:10px 28px;border:1px solid #7c3aed;border-radius:20px" id="lvlOkBtn">${currentLang==='en'?'Let\'s go! 🚀':'Вперёд! 🚀'}</div>
+  `;
+  document.body.appendChild(ov);
+  document.getElementById('lvlOkBtn').onclick=()=>{ov.style.animation='fadeOutFast .25s ease forwards';setTimeout(()=>ov.remove(),260);};
+  setTimeout(()=>{if(ov.parentNode){ov.style.animation='fadeOutFast .25s ease forwards';setTimeout(()=>ov.remove(),260);}},4000);
+}
+
+// ============================================================
+//  VOICE COACH LINES — умные фразы по ситуации
+// ============================================================
+const COACH_LINES={
+  ru:{
+    start:{
+      pushup:['Отжимания! Держите локти близко к телу.','Вперёд! Корпус прямой, дышите ровно.','Погнали! Грудь к полу — это цель.'],
+      squat:['Приседания! Спина прямая, колени над носками.','Погнали! Садитесь глубже, это даст результат.','Вперёд! Ноги на ширине плеч.'],
+      plank:['Планка! Тело — одна прямая линия.','Держитесь! Напрягите пресс и дышите.','Погнали! Спина ровная, таз не задирать.'],
+      situp:['Пресс! Не тяните шею, работает живот.','Погнали! Медленно вверх — медленно вниз.','Вперёд! Дышите на подъёме.'],
+      lunge:['Выпады! Колено не выходит за носок.','Погнали! Держите равновесие.','Вперёд! Чередуйте ноги.'],
+      burpee:['Бёрпи! Это будет тяжело — но вы справитесь.','Погнали! Каждое повторение — победа.','Вперёд! Взрывная сила!'],
+      pullup:['Подтягивания! Лопатки вниз и назад.','Погнали! Тяните грудью, не подбородком.','Вперёд! Полная амплитуда — вот цель.'],
+    },
+    milestones:{
+      5:'Отличный разгон!',10:'Десятка! Продолжайте!',15:'Пятнадцать! Вы в зоне!',
+      20:'Двадцать! Это уже серьёзно!',30:'Тридцать! Феноменально!',50:'Пятьдесят! Вы легенда!',
+    },
+    encouragement:['Так держать!','Вы сильнее, чем думаете!','Не останавливайтесь!','Ещё одно!','Дышите!','Держитесь!','Почти!'],
+    comboStart:'Комбо! Не останавливайтесь!',
+    combo10:'Невероятно! Десять подряд!',
+    combo20:'Машина! Комбо двадцать!',
+    finish:{
+      low:'Хорошее начало! В следующий раз будет больше.',
+      mid:'Отличная работа! Вы заслужили отдых.',
+      high:'Невероятная тренировка! Вы бьёте рекорды!',
+    },
+    newRecord:'Новый личный рекорд! Так держать!',
+    recordBeaten:(diff)=>`Рекорд побит! На ${diff} больше прошлого!`,
+    goalDone:'Цель достигнута! Вы сделали это!',
+  },
+  en:{
+    start:{
+      pushup:['Push-ups! Keep your elbows close.','Let\'s go! Core tight, breathe steady.','Go! Chest to the floor — that\'s the goal.'],
+      squat:['Squats! Back straight, knees over toes.','Go deep! That\'s where the gains are.','Let\'s go! Feet shoulder-width apart.'],
+      plank:['Plank! Body is one straight line.','Hold it! Brace your core and breathe.','Go! Back flat, hips level.'],
+      situp:['Sit-ups! Don\'t pull your neck, use your abs.','Let\'s go! Slow up, slow down.','Go! Exhale on the way up.'],
+      lunge:['Lunges! Knee stays behind the toe.','Let\'s go! Find your balance.','Go! Alternate legs.'],
+      burpee:['Burpees! This will be tough — you\'ve got this.','Let\'s go! Every rep is a win.','Go! Explosive power!'],
+      pullup:['Pull-ups! Shoulders back and down.','Let\'s go! Pull with your chest, not your chin.','Go! Full range of motion is the goal.'],
+    },
+    milestones:{
+      5:'Great start!',10:'Ten reps! Keep going!',15:'Fifteen! You\'re in the zone!',
+      20:'Twenty! Now we\'re talking!',30:'Thirty! Phenomenal!',50:'Fifty! You\'re a legend!',
+    },
+    encouragement:['Keep it up!','You\'re stronger than you think!','Don\'t stop!','One more!','Breathe!','Hold on!','Almost there!'],
+    comboStart:'Combo! Don\'t stop now!',
+    combo10:'Incredible! Ten in a row!',
+    combo20:'Machine! Combo twenty!',
+    finish:{
+      low:'Good start! Next time you\'ll do more.',
+      mid:'Great work! You earned that rest.',
+      high:'Incredible session! You\'re breaking records!',
+    },
+    newRecord:'New personal record! Keep it up!',
+    recordBeaten:(diff)=>`Record beaten! ${diff} more than before!`,
+    goalDone:'Goal achieved! You did it!',
+  }
+};
+let encourageTimer=null;
+function cl(){return COACH_LINES[currentLang]||COACH_LINES.ru;}
+function speakCoachLine(key,...args){
+  if(!voiceEnabled)return;
+  const lines=cl();
+  if(key==='start'){
+    const arr=lines.start[currentEx]||[];
+    const phrase=arr[Math.floor(Math.random()*arr.length)]||'';
+    if(phrase)speak(phrase,'coach');
+  }else if(key==='milestone'){
+    const n=args[0];const phrase=lines.milestones[n];if(phrase)speak(phrase,'!');
+  }else if(key==='encourage'){
+    const arr=lines.encouragement;speak(arr[Math.floor(Math.random()*arr.length)],'coach');
+  }else if(key==='comboStart'){speak(lines.comboStart,'!');
+  }else if(key==='combo10'){speak(lines.combo10,'!');
+  }else if(key==='combo20'){speak(lines.combo20,'!');
+  }else if(key==='finish'){
+    const r=repCount+(plankTime>0?Math.floor(plankTime):0);
+    const level=r>=30?'high':r>=10?'mid':'low';
+    speak(lines.finish[level],'coach');
+  }else if(key==='newRecord'){speak(lines.newRecord,'!');
+  }else if(key==='recordBeaten'){speak(lines.recordBeaten(args[0]),'!');
+  }else if(key==='goalDone'){speak(lines.goalDone,'!');}
+}
+function startEncourageLoop(){
+  clearInterval(encourageTimer);
+  encourageTimer=setInterval(()=>{
+    if(isRunning&&!isPaused&&repCount>0)speakCoachLine('encourage');
+  },45000); // каждые 45 сек — не навязчиво
+}
+function stopEncourageLoop(){clearInterval(encourageTimer);}
 let coachCooldowns={};
 function coachCue(key,txt,type='warn',cooldownMs=6000){
   const now=Date.now();
