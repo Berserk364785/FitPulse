@@ -383,3 +383,15 @@ body::after{width:500px;height:500px;background:radial-gradient(circle,rgba(168,
 @keyframes fadeInFast{from{opacity:0}to{opacity:1}}
 @keyframes fadeOutFast{from{opacity:1}to{opacity:0}}
 
+
+/* Пульсация калорий в баннере сессии */
+@keyframes calPulse{
+  0%{color:#fff;transform:scale(1)}
+  40%{color:#f59e0b;transform:scale(1.28)}
+  100%{color:#fff;transform:scale(1)}
+}
+
+/* Стрик-календарь */
+#streakCalendar{
+  margin-top:8px;
+}

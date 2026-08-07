@@ -30,6 +30,10 @@ function beep(f=800,d=.1,v=.28){try{const c=aC(),o=c.createOscillator(),g=c.crea
 const bSuccess=()=>{beep(1200,.18);setTimeout(()=>beep(1500,.15),180);};
 const bLvl=()=>{beep(1400,.2);setTimeout(()=>beep(1700,.2),200);setTimeout(()=>beep(2000,.25),420);};
 const bAch=()=>{beep(1000,.15);setTimeout(()=>beep(1300,.15),160);};
+const bRecord=()=>{
+  // До-ми-соль-до — триумфальная мелодия рекорда
+  beep(523,.15);setTimeout(()=>beep(659,.15),170);setTimeout(()=>beep(784,.15),340);setTimeout(()=>beep(1047,.35),510);
+};
 
 // ============================================================
 //  CONFETTI
@@ -85,7 +89,7 @@ const I18N={
     hubSettings:'⚙️ Настройки',hubSettingsSub:'Камера, голос, отображение',
     hubFaq:'❓ Как пользоваться',hubFaqSub:'FAQ и приветствие',
     hubFeedback:'💬 Обратная связь',hubFeedbackSub:'Отзыв, идея или вопрос',
-    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v3',
+    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v5',
     // community
     teamDesc:'Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете',
     createRoom:'Создать',joinRoom:'Войти',shareRoomBtn:'🔗 Поделиться',leaveRoom:'Покинуть команду',
@@ -143,7 +147,7 @@ const I18N={
     hubSettings:'⚙️ Settings',hubSettingsSub:'Camera, voice, display',
     hubFaq:'❓ How to use',hubFaqSub:'FAQ & welcome',
     hubFeedback:'💬 Feedback',hubFeedbackSub:'Review, idea or question',
-    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v3',
+    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v5',
     // community
     teamDesc:'Create a room or join by code — compete with people you know',
     createRoom:'Create',joinRoom:'Join',shareRoomBtn:'🔗 Share',leaveRoom:'Leave team',
@@ -361,8 +365,14 @@ function stopSes(){if(sesTimerInt){clearInterval(sesTimerInt);sesTimerInt=null;}
 function updSes(){
   const s=Math.floor((Date.now()-sesStart)/1000);
   q('sTime').textContent=s>=60?`${Math.floor(s/60)}м ${s%60}с`:`${s}с`;
-  q('sReps').textContent=repCount;
-  q('sCal').textContent=Math.floor(caloriesBurned-sesCal);
+  q('sReps').textContent=EX[currentEx]?.isPlank?`${Math.floor(plankTime)}с`:repCount;
+  const calNow=Math.floor(caloriesBurned-sesCal);
+  const calEl=q('sCal');
+  if(calEl){
+    const prev=parseInt(calEl.textContent)||0;
+    calEl.textContent=calNow;
+    if(calNow>prev){calEl.style.animation='none';requestAnimationFrame(()=>{calEl.style.animation='calPulse .4s ease-out';});}
+  }
   q('sStr').textContent=streak;
 }
 
@@ -713,12 +723,13 @@ function addRep(){
     const diff=repCount-prevRecord;
     prRecords[currentEx]=repCount;
     if(prevRecord===0){
-      speakCoachLine('newRecord');toast('🏆 Первый личный рекорд!');
+      speakCoachLine('newRecord');toast('🏆 Первый личный рекорд!');bRecord();
     }else{
       speakCoachLine('recordBeaten',diff);
       toast(`🏆 Рекорд! ${repCount} — это на ${diff} больше прошлых ${prevRecord}`,3500);
+      bRecord();
     }
-    bSuccess();confetti(2000);save();updatePRList();
+    confetti(2000);save();updatePRList();
   }
   if(navigator.vibrate)navigator.vibrate(40);
 }
@@ -809,14 +820,44 @@ function bestAng(lm,type){
   return 0;
 }
 const CONN=[[11,13],[13,15],[12,14],[14,16],[11,12],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+let skelLostTs=0,autoPaused=false;
 function drawSkel(lm){
   const cv=document.getElementById('canvas');if(!cv)return;
   const c=cv.getContext('2d'),W=cv.width,H=cv.height;
   c.clearRect(0,0,W,H);
-  const good=q('qualityBadge')?.textContent?.includes('✅');
-  c.strokeStyle=good?'rgba(34,197,94,.85)':'rgba(239,68,68,.75)';c.lineWidth=3;c.lineCap='round';
+  const qualText=q('qualityBadge')?.textContent||'';
+  const isPerfect=qualText.includes('✅');
+  const isWarn=qualText.includes('⚠️');
+  // Градиент по качеству: зелёный → жёлтый → красный
+  const strokeColor=isPerfect?'rgba(34,197,94,.9)':isWarn?'rgba(251,191,36,.9)':'rgba(239,68,68,.8)';
+  const dotColor=isPerfect?'#22c55e':isWarn?'#fbbf24':'#ef4444';
+  const glowColor=isPerfect?'rgba(34,197,94,.35)':isWarn?'rgba(251,191,36,.25)':'rgba(239,68,68,.2)';
+  // Glow под скелетом
+  c.shadowColor=glowColor;c.shadowBlur=isPerfect?18:8;
+  c.strokeStyle=strokeColor;c.lineWidth=isPerfect?3.5:3;c.lineCap='round';
   CONN.forEach(([a,b])=>{const p=lm[a],qq=lm[b];if(p?.visibility>.4&&qq?.visibility>.4){c.beginPath();c.moveTo(p.x*W,p.y*H);c.lineTo(qq.x*W,qq.y*H);c.stroke();}});
-  for(let i=11;i<=28;i++){const p=lm[i];if(!p||p.visibility<.4)continue;c.beginPath();c.arc(p.x*W,p.y*H,5,0,Math.PI*2);c.fillStyle=good?'#22c55e':'#ef4444';c.fill();}
+  c.shadowBlur=0;
+  for(let i=11;i<=28;i++){const p=lm[i];if(!p||p.visibility<.4)continue;c.beginPath();c.arc(p.x*W,p.y*H,isPerfect?6:5,0,Math.PI*2);c.fillStyle=dotColor;c.fill();}
+}
+
+// Автопауза при потере скелета
+function handleSkelLoss(){
+  if(!isRunning||isPaused)return;
+  const now=Date.now();
+  if(!skelLostTs){skelLostTs=now;return;}
+  if(now-skelLostTs>2500&&!autoPaused){
+    autoPaused=true;isPaused=true;
+    toast(currentLang==='en'?'⏸️ Auto-paused — lost pose':'⏸️ Авто-пауза — поза потеряна');
+    q('pauseBtn')&&(q('pauseBtn').textContent=currentLang==='en'?'▶️ Resume':'▶️ Продолжить');
+  }
+}
+function handleSkelFound(){
+  skelLostTs=0;
+  if(autoPaused){
+    autoPaused=false;isPaused=false;
+    toast(currentLang==='en'?'▶️ Resumed!':'▶️ Продолжаем!');
+    q('pauseBtn')&&(q('pauseBtn').textContent=currentLang==='en'?'⏸️ Pause':'⏸️ Пауза');
+  }
 }
 
 // ============================================================
@@ -863,9 +904,11 @@ function ensurePose(){
   return pose;
 }
 function onResults(res){
-  if(!res.poseLandmarks||!isRunning||isPaused)return;
+  if(!res.poseLandmarks){if(isRunning&&!isPaused)handleSkelLoss();return;}
+  if(!isRunning||isPaused)return;
   const lm=res.poseLandmarks,e=EX[currentEx];if(!e)return;
   drawSkel(lm);
+  handleSkelFound();
   wellbeingCheck(lm,isDown); // не влияет на счёт, только наблюдает
   let ang=0,ok=true;
   try{
@@ -1076,10 +1119,41 @@ function updateDayStreak(){
 }
 function updateDayStreakUI(){
   const numEl=q('dayStreakNum');if(!numEl)return;
-  const word=dayStreak===1?'день':(dayStreak>=2&&dayStreak<=4?'дня':'дней');
+  const word=currentLang==='en'?(dayStreak===1?'day':'days'):(dayStreak===1?'день':(dayStreak>=2&&dayStreak<=4?'дня':'дней'));
   numEl.textContent=`${dayStreak} ${word}`;
   const banner=q('dayStreakBanner');
   if(banner)banner.classList.toggle('cold',dayStreak===0);
+  renderStreakCalendar();
+}
+
+function getWorkoutDates(){
+  try{return JSON.parse(localStorage.getItem('fp_workout_dates')||'[]');}catch(e){return[];}
+}
+function recordWorkoutDate(){
+  const today=localDateKey();
+  const dates=getWorkoutDates();
+  if(!dates.includes(today)){dates.push(today);localStorage.setItem('fp_workout_dates',JSON.stringify(dates.slice(-90)));}
+}
+function renderStreakCalendar(){
+  let el=document.getElementById('streakCalendar');
+  if(!el){
+    el=document.createElement('div');el.id='streakCalendar';
+    el.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 2px;justify-content:center;';
+    const banner=q('dayStreakBanner');
+    if(banner)banner.appendChild(el);
+  }
+  const dates=new Set(getWorkoutDates());
+  const today=localDateKey();
+  el.innerHTML='';
+  for(let i=29;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const done=dates.has(key);const isToday=key===today;
+    const cell=document.createElement('div');
+    cell.style.cssText=`width:16px;height:16px;border-radius:3px;background:${done?'#a78bfa':'rgba(255,255,255,.1)'};${isToday?'outline:2px solid #c026d3;outline-offset:1px;':''}opacity:${done?1:.45};transition:background .3s;`;
+    cell.title=key;
+    el.appendChild(cell);
+  }
 }
 
 function stopAll(){
@@ -1099,7 +1173,7 @@ function stopAll(){
   const didWork=repCount>0||plankTime>0;
   if(didWork){
     speakCoachLine('finish');
-    saveSet(true);updateDayStreak();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();toast('✅ Тренировка сохранена');publishToCloud(true);
+    saveSet(true);updateDayStreak();recordWorkoutDate();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();toast('✅ Тренировка сохранена');publishToCloud(true);
   }else toast('Стоп');
   comboCount=0;hideComboUI();stopEncourageLoop();
   stopHiit();
@@ -1866,8 +1940,25 @@ function toggleQuest(id){document.getElementById(id)?.classList.toggle('collapse
 // запись в начало CHANGELOG (новые сверху). Модалка покажется автоматически
 // один раз тем, у кого в localStorage записана более старая версия —
 // включая существующих пользователей, которые ещё не видели апдейт.
-const CURRENT_VERSION=3;
+const CURRENT_VERSION=5;
 const CHANGELOG=[
+  {v:5,date:'Август 2026',items:[
+    '📅 Streak-календарь — 30 дней тренировок визуально прямо под счётчиком серии',
+    '⏸️ Умная автопауза — потерял позу на 2.5 сек? Тренировка автоматически паузируется и продолжается когда вернулся',
+    '🦴 Скелет с градиентом — зелёный (идеально) → жёлтый (предупреждение) → красный, плюс glow-эффект при отличной технике',
+    '🔥 Живые калории — счётчик калорий в баннере сессии обновляется каждую секунду с анимацией',
+    '🎵 Мелодия рекорда — при новом личном рекорде играет триумфальная До-Ми-Соль-До',
+  ]},
+  {v:4,date:'Август 2026',items:[
+    '🎮 Комбо-множитель — делай повторения без остановки и получай x1.2, x1.5, x2.0🔥 XP',
+    '✨ Летящий +XP — после каждого повтора видно сколько опыта начислено и какой комбо активен',
+    '🏆 Экран Level Up — при новом уровне появляется полноэкранный момент триумфа с титулом',
+    '🗣️ Умный голосовой тренер — уникальные фразы для каждого упражнения при старте',
+    '🎯 Milestone-фразы — на 5, 10, 15, 20, 30, 50 повторений тренер говорит особые слова',
+    '💬 Мотивация каждые 45 сек — тренер поддерживает во время долгих подходов',
+    '📢 Финальный итог голосом — после тренировки тренер оценивает результат',
+    '🌐 Полный перевод интерфейса — переведено 100+ элементов, включая упражнения и достижения',
+  ]},
   {v:3,date:'Июнь 2026',items:[
     '👥 Командные челленджи с друзьями — создайте комнату и соревнуйтесь в своём кругу',
     '📐 График прогресса по технике (угол) со временем — вкладка «Техника» в разделе Прогресс',
