@@ -47,6 +47,125 @@ function confetti(ms=2000){
 }
 
 // ============================================================
+//  OFFLINE QUEUE — очередь для Supabase при отсутствии сети
+// ============================================================
+const OFFLINE_Q_KEY = 'fp_offline_queue';
+function offlineEnqueue(op) {
+  // op: { type: 'score'|'community'|'team', payload: {...} }
+  try {
+    const q = JSON.parse(localStorage.getItem(OFFLINE_Q_KEY) || '[]');
+    q.push({ ...op, ts: Date.now() });
+    // Держим не более 50 операций чтобы не раздувать storage
+    localStorage.setItem(OFFLINE_Q_KEY, JSON.stringify(q.slice(-50)));
+  } catch(e) { console.warn('offlineEnqueue failed', e); }
+}
+async function offlineFlush() {
+  if (!navigator.onLine) return;
+  try {
+    const q = JSON.parse(localStorage.getItem(OFFLINE_Q_KEY) || '[]');
+    if (!q.length) return;
+    const failed = [];
+    for (const op of q) {
+      let ok = false;
+      try {
+        if (op.type === 'score')     ok = await cloudPublishScore(op.payload);
+        if (op.type === 'community') ok = await cloudAddCommunityProgress(op.payload.weekKey, op.payload.amount);
+        if (op.type === 'team')      ok = await cloudAddTeamProgress(op.payload.code, op.payload.amount);
+      } catch(e) { ok = false; }
+      if (!ok) failed.push(op);
+    }
+    localStorage.setItem(OFFLINE_Q_KEY, JSON.stringify(failed));
+    if (q.length > failed.length) {
+      const synced = q.length - failed.length;
+      toast(`☁️ Синхронизировано ${synced} ${synced===1?'операция':'операций'} из офлайн-очереди`);
+    }
+  } catch(e) { console.warn('offlineFlush failed', e); }
+}
+// Слушаем восстановление сети
+window.addEventListener('online', () => { offlineFlush(); toast('🌐 Сеть восстановлена — синхронизируем...'); });
+
+// ============================================================
+//  ANTI-CHEAT — валидация перед отправкой в Supabase
+// ============================================================
+// Физически невозможные значения отсекаем на клиенте.
+// Это не 100% защита (клиент можно обойти), но убирает
+// случайные баги и простые попытки читерства.
+const ANTI_CHEAT = {
+  maxRepsPerMinute: 120,   // больше 2 повт/сек физически невозможно
+  maxCalPerSession: 2000,  // 2000 ккал за одну тренировку — нереально
+  maxXpPerSession:  5000,  // потолок XP за сессию
+};
+let sessionStartXp = 0;
+let sessionStartTs = 0;
+function antiCheatValidate() {
+  const sessionDurMin = Math.max(1, (Date.now() - sessionStartTs) / 60000);
+  const sessionXpGain = xp + (lvl - 1) * 100 - sessionStartXp;
+  const totalRepsSession = repCount;
+  const repsPerMin = totalRepsSession / sessionDurMin;
+  if (repsPerMin > ANTI_CHEAT.maxRepsPerMinute) {
+    console.warn(`[AntiCheat] Слишком быстрые повторения: ${repsPerMin.toFixed(1)}/мин`);
+    return false;
+  }
+  if (sessionXpGain > ANTI_CHEAT.maxXpPerSession) {
+    console.warn(`[AntiCheat] Слишком много XP за сессию: ${sessionXpGain}`);
+    return false;
+  }
+  const calGain = caloriesBurned - (parseFloat(localStorage.getItem('fp_cal_before_session')) || 0);
+  if (calGain > ANTI_CHEAT.maxCalPerSession) {
+    console.warn(`[AntiCheat] Нереальное количество калорий: ${calGain}`);
+    return false;
+  }
+  return true;
+}
+
+// ============================================================
+//  PUSH NOTIFICATIONS — локальный планировщик без сервера
+// ============================================================
+let reminderTimer = null;
+async function requestPushPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+function cancelReminder() {
+  clearTimeout(reminderTimer);
+  reminderTimer = null;
+  // Отменяем и в SW
+  if (navigator.serviceWorker?.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'CANCEL_REMINDER' });
+  }
+}
+function scheduleWorkoutReminder(hoursFromNow = 23) {
+  cancelReminder();
+  if (Notification.permission !== 'granted') return;
+  const delayMs = hoursFromNow * 3600 * 1000;
+  const msgs = [
+    { title: 'FitPulse 🔥', body: 'Серия горит! Не забудь потренироваться сегодня.' },
+    { title: 'FitPulse 💪', body: 'Твоё тело ждёт тренировки. Один подход — и настроение лучше!' },
+    { title: 'FitPulse ⚡', body: 'Вчера ты тренировался. Продолжи серию сегодня!' },
+  ];
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  // Пробуем через SW для надёжности в фоне
+  if (navigator.serviceWorker?.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SCHEDULE_REMINDER', delayMs, msg });
+  } else {
+    // Fallback — setTimeout в основном потоке (работает только пока вкладка открыта)
+    reminderTimer = setTimeout(() => {
+      if (Notification.permission === 'granted') new Notification(msg.title, { body: msg.body, icon: './icon-192.png' });
+    }, delayMs);
+  }
+}
+function setupDailyReminder() {
+  // Вызывается после каждой тренировки — планируем напоминание на следующий день
+  const lastDate = lastWorkoutDate;
+  if (!lastDate) return;
+  // Если сегодня уже тренировался — напоминаем завтра в ~то же время
+  scheduleWorkoutReminder(23);
+}
+
+// ============================================================
 //  i18n — переключение языка интерфейса (RU / EN)
 // ============================================================
 // Покрывает статичные подписи UI (кнопки, заголовки, лейблы). Динамические
@@ -89,7 +208,7 @@ const I18N={
     hubSettings:'⚙️ Настройки',hubSettingsSub:'Камера, голос, отображение',
     hubFaq:'❓ Как пользоваться',hubFaqSub:'FAQ и приветствие',
     hubFeedback:'💬 Обратная связь',hubFeedbackSub:'Отзыв, идея или вопрос',
-    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v5',
+    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v6',
     // community
     teamDesc:'Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете',
     createRoom:'Создать',joinRoom:'Войти',shareRoomBtn:'🔗 Поделиться',leaveRoom:'Покинуть команду',
@@ -147,7 +266,7 @@ const I18N={
     hubSettings:'⚙️ Settings',hubSettingsSub:'Camera, voice, display',
     hubFaq:'❓ How to use',hubFaqSub:'FAQ & welcome',
     hubFeedback:'💬 Feedback',hubFeedbackSub:'Review, idea or question',
-    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v5',
+    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v6',
     // community
     teamDesc:'Create a room or join by code — compete with people you know',
     createRoom:'Create',joinRoom:'Join',shareRoomBtn:'🔗 Share',leaveRoom:'Leave team',
@@ -357,6 +476,10 @@ function addPlankCal(dt){
 // ============================================================
 function startSes(){
   sesStart=Date.now();sesCal=caloriesBurned;
+  // Инициализация античита для этой сессии
+  sessionStartXp=xp+(lvl-1)*100;
+  sessionStartTs=Date.now();
+  localStorage.setItem('fp_cal_before_session', String(caloriesBurned));
   q('sessionBanner').classList.add('visible');
   if(sesTimerInt)clearInterval(sesTimerInt);
   sesTimerInt=setInterval(updSes,1000);
@@ -1173,7 +1296,7 @@ function stopAll(){
   const didWork=repCount>0||plankTime>0;
   if(didWork){
     speakCoachLine('finish');
-    saveSet(true);updateDayStreak();recordWorkoutDate();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();toast('✅ Тренировка сохранена');publishToCloud(true);
+    saveSet(true);updateDayStreak();recordWorkoutDate();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();setupDailyReminder();toast('✅ Тренировка сохранена');publishToCloud(true);
   }else toast('Стоп');
   comboCount=0;hideComboUI();stopEncourageLoop();
   stopHiit();
@@ -1334,6 +1457,16 @@ async function updateLB(){
 
 async function publishToCloud(silent=true){
   if(!CLOUD_ENABLED)return;
+  // Античит — не публикуем явно невозможные результаты
+  if(!antiCheatValidate()){
+    console.warn('[AntiCheat] Публикация заблокирована — данные не прошли проверку');
+    return;
+  }
+  if(!navigator.onLine){
+    offlineEnqueue({type:'score',payload:{name:userName,avatar,avatarIsPhoto,xp,lvl,maxStreak}});
+    if(!silent)toast('📴 Офлайн — результат сохранён и будет опубликован при появлении сети');
+    return;
+  }
   const ok=await cloudPublishScore({name:userName,avatar,avatarIsPhoto,xp,lvl,maxStreak},e=>{if(!silent)toast('❌ Ошибка публикации: '+e.message,4000);});
   if(ok&&!silent)toast('🌍 Результат опубликован в рейтинге');
 }
@@ -1470,6 +1603,7 @@ function bufferCommunityProgress(n=1){
 async function flushCommunityProgress(){
   if(communityRepsBuffer<=0)return;
   const amount=communityRepsBuffer;communityRepsBuffer=0;
+  if(!navigator.onLine){offlineEnqueue({type:'community',payload:{weekKey:isoWeekKey(),amount}});return;}
   const ok=await cloudAddCommunityProgress(isoWeekKey(),amount);
   if(ok)refreshCommunityChallengeUI();
 }
@@ -1499,6 +1633,7 @@ function bufferTeamProgress(n=1){
 async function flushTeamProgress(){
   if(!myRoomCode||teamRepsBuffer<=0)return;
   const amount=teamRepsBuffer;teamRepsBuffer=0;
+  if(!navigator.onLine){offlineEnqueue({type:'team',payload:{code:myRoomCode,amount}});return;}
   await cloudAddTeamProgress(myRoomCode,amount);
   refreshTeamRoomUI();
 }
@@ -1940,8 +2075,16 @@ function toggleQuest(id){document.getElementById(id)?.classList.toggle('collapse
 // запись в начало CHANGELOG (новые сверху). Модалка покажется автоматически
 // один раз тем, у кого в localStorage записана более старая версия —
 // включая существующих пользователей, которые ещё не видели апдейт.
-const CURRENT_VERSION=5;
+const CURRENT_VERSION=6;
 const CHANGELOG=[
+  {v:6,date:'Август 2026',items:[
+    '📴 Offline-first — тренировки, XP и командные очки сохраняются в офлайн-очередь и автоматически синхронизируются при появлении сети',
+    '🛡️ Защита лидерборда — физически невозможные результаты (>120 повт/мин, >2000 ккал за сессию) блокируются до отправки в рейтинг',
+    '⚡ Умное кеширование SW — MediaPipe CDN кешируется навсегда (Cache-First), ваша статика обновляется при сети (Network-First)',
+    '🔔 Push-уведомления через Service Worker — напоминают потренироваться если пропустил день, работают даже когда приложение закрыто',
+    '📲 Виджет на домашний экран — ярлыки «Начать тренировку» и «Мой прогресс» доступны прямо с иконки приложения',
+    '🔁 Кнопка «Через час» в уведомлении — отложи напоминание не открывая приложение',
+  ]},
   {v:5,date:'Август 2026',items:[
     '📅 Streak-календарь — 30 дней тренировок визуально прямо под счётчиком серии',
     '⏸️ Умная автопауза — потерял позу на 2.5 сек? Тренировка автоматически паузируется и продолжается когда вернулся',
@@ -2204,7 +2347,27 @@ window.onload=()=>{
   q('moreExBtn')?.addEventListener('click',()=>{buildMoreExGrid();openModal('moreExModal');});
 
   // Notifications (community tab)
-  q('notifBtn')?.addEventListener('click',()=>Notification.requestPermission().then(p=>toast(p==='granted'?'✅ Разрешено':'❌ Отклонено')));
+  q('notifBtn')?.addEventListener('click', async () => {
+    const granted = await requestPushPermission();
+    const statusEl = q('notifStatus');
+    const btn = q('notifBtn');
+    if (granted) {
+      toast('✅ Уведомления включены — напомним если пропустишь день');
+      if (statusEl) statusEl.textContent = '✅ Уведомления включены';
+      if (btn) { btn.textContent = '🔔 Уведомления включены'; btn.disabled = true; btn.style.opacity = '.6'; }
+      scheduleWorkoutReminder(23);
+    } else {
+      toast('❌ Уведомления отклонены — разрешите в настройках браузера');
+      if (statusEl) statusEl.textContent = '❌ Разрешите уведомления в настройках браузера';
+    }
+  });
+  // Показываем текущий статус при загрузке
+  (()=>{
+    const statusEl=q('notifStatus');const btn=q('notifBtn');
+    if(!statusEl||!btn)return;
+    if(Notification.permission==='granted'){statusEl.textContent='✅ Уведомления включены';btn.textContent='🔔 Уведомления включены';btn.disabled=true;btn.style.opacity='.6';}
+    else if(Notification.permission==='denied'){statusEl.textContent='❌ Заблокировано в браузере — откройте настройки сайта';}
+  })();
   q('publishNowBtn')?.addEventListener('click',async()=>{await publishToCloud(false);await updateLB();});
   q('shareResultBtn')?.addEventListener('click',shareResult);
   q('inviteFriendBtn')?.addEventListener('click',shareReferral);
