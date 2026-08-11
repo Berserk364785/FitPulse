@@ -208,7 +208,7 @@ const I18N={
     hubSettings:'⚙️ Настройки',hubSettingsSub:'Камера, голос, отображение',
     hubFaq:'❓ Как пользоваться',hubFaqSub:'FAQ и приветствие',
     hubFeedback:'💬 Обратная связь',hubFeedbackSub:'Отзыв, идея или вопрос',
-    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v6',
+    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v7',
     // community
     teamDesc:'Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете',
     createRoom:'Создать',joinRoom:'Войти',shareRoomBtn:'🔗 Поделиться',leaveRoom:'Покинуть команду',
@@ -266,7 +266,7 @@ const I18N={
     hubSettings:'⚙️ Settings',hubSettingsSub:'Camera, voice, display',
     hubFaq:'❓ How to use',hubFaqSub:'FAQ & welcome',
     hubFeedback:'💬 Feedback',hubFeedbackSub:'Review, idea or question',
-    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v6',
+    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v7',
     // community
     teamDesc:'Create a room or join by code — compete with people you know',
     createRoom:'Create',joinRoom:'Join',shareRoomBtn:'🔗 Share',leaveRoom:'Leave team',
@@ -822,6 +822,7 @@ function addRep(){
   beep(600,.08);
   // Комбо
   tickCombo();
+  hookDuelRep();
   const comboMult=getComboMult();
   // Milestone голос (заменяет простой speak(`${repCount}`) каждые 5)
   if(COACH_LINES[currentLang]?.milestones[repCount]){
@@ -1782,10 +1783,16 @@ function closeModal(id){const m=document.getElementById(id);if(m)m.classList.rem
 function openTab(id){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
-  const el=document.getElementById('tab-'+id);if(el)el.classList.add('active');
+  const el=document.getElementById('tab-'+id);
+  if(el){
+    el.classList.add('active');
+    // Перезапускаем анимацию slide-in
+    el.style.animation='none';
+    requestAnimationFrame(()=>{el.style.animation='';});
+  }
   if(id==='progress'){drawChart();buildChartTabs();}
   if(id==='profile')updateLvlUI();
-  if(id==='community'){updateLB();updateSharePreview();refreshCommunityChallengeUI();refreshTeamRoomUI();}
+  if(id==='community'){updateLB();updateSharePreview();refreshCommunityChallengeUI();refreshTeamRoomUI();refreshDuelUI();}
 }
 
 // ============================================================
@@ -2075,8 +2082,18 @@ function toggleQuest(id){document.getElementById(id)?.classList.toggle('collapse
 // запись в начало CHANGELOG (новые сверху). Модалка покажется автоматически
 // один раз тем, у кого в localStorage записана более старая версия —
 // включая существующих пользователей, которые ещё не видели апдейт.
-const CURRENT_VERSION=6;
+const CURRENT_VERSION=7;
 const CHANGELOG=[
+  {v:7,date:'Август 2026',items:[
+    '⚔️ Дуэли в реальном времени — вызови любого игрока из лидерборда на 60-секундный поединок',
+    '📡 Live-счёт дуэли — видишь прогресс соперника в реальном времени через Supabase Realtime',
+    '🏆 Победитель получает +50 XP и уведомление о результате',
+    '🌊 Animated gradient фон — живой пульсирующий фон под любую тему',
+    '✨ Ripple-эффект — на всех кнопках и карточках при нажатии',
+    '🎞️ Slide-анимация вкладок — плавное появление при переключении',
+    '💜 Shimmer на XP-баре — блик скользит по прогресс-бару',
+    '🔥 Streak-пульсация — баннер серии светится если тренируешься 3+ дня подряд',
+  ]},
   {v:6,date:'Август 2026',items:[
     '📴 Offline-first — тренировки, XP и командные очки сохраняются в офлайн-очередь и автоматически синхронизируются при появлении сети',
     '🛡️ Защита лидерборда — физически невозможные результаты (>120 повт/мин, >2000 ккал за сессию) блокируются до отправки в рейтинг',
@@ -2192,6 +2209,296 @@ function registerSW(){
   // Если SW взял управление после обновления (skipWaiting) — перезагружаем страницу
   navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload());
 }
+
+// ============================================================
+//  DUELS — система дуэлей через Supabase Realtime
+// ============================================================
+let duelState = null; // null | 'incoming' | 'waiting' | 'active' | 'finished'
+let duelData  = {};   // { id, challengerId, challengerName, opponentId, opponentName, exercise, duration }
+let duelTimer = null;
+let duelSub   = null; // Supabase Realtime subscription
+let duelMyScore    = 0;
+let duelOpponentScore = 0;
+let duelTimeLeft = 0;
+
+const DUEL_DURATION = 60; // секунд
+
+// Получаем Supabase клиент из cloud.js
+function getSupabaseClient(){
+  return window._supabase || null;
+}
+
+// ── Инициализация ──────────────────────────────────────────
+function initDuels(){
+  if(!CLOUD_ENABLED)return;
+  subscribeToIncomingDuels();
+  refreshDuelUI();
+}
+
+// ── Слушаем входящие вызовы ────────────────────────────────
+async function subscribeToIncomingDuels(){
+  const sb=getSupabaseClient();if(!sb)return;
+  const myId=localStorage.getItem('fp_user_id');if(!myId)return;
+  try{
+    if(duelSub){await sb.removeChannel(duelSub);duelSub=null;}
+    duelSub=sb.channel('duels-incoming-'+myId)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'fp_duels',filter:`opponent_id=eq.${myId}`},
+        payload=>{
+          const d=payload.new;
+          if(d.status==='pending'){
+            duelData={id:d.id,challengerId:d.challenger_id,challengerName:d.challenger_name,
+                      opponentId:d.opponent_id,opponentName:d.opponent_name,
+                      exercise:d.exercise,duration:d.duration||DUEL_DURATION};
+            duelState='incoming';
+            refreshDuelUI();
+            // Пуш-уведомление если приложение в фоне
+            if(Notification.permission==='granted'&&document.visibilityState!=='visible'){
+              new Notification('⚔️ Вызов на дуэль!',{
+                body:`${d.challenger_name} вызывает тебя на дуэль! ${EX[d.exercise]?.name||d.exercise}`,
+                icon:'./icon-192.png'
+              });
+            }
+            toast(`⚔️ ${d.challenger_name} вызывает тебя на дуэль!`,4000);
+          }
+        }
+      )
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'fp_duels'},
+        payload=>{
+          const d=payload.new;
+          if(duelData.id&&d.id===duelData.id){
+            // Обновляем счёт соперника в реальном времени
+            const myId2=localStorage.getItem('fp_user_id');
+            if(d.challenger_id===myId2)duelOpponentScore=d.opponent_score||0;
+            else duelOpponentScore=d.challenger_score||0;
+            if(d.status==='active'&&duelState==='waiting'){duelState='active';startDuelTimer();}
+            if(d.status==='finished'&&duelState==='active'){duelState='finished';finishDuel(false);}
+            updateDuelScoreUI();
+          }
+        }
+      )
+      .subscribe();
+  }catch(e){console.warn('Duel subscription failed',e);}
+}
+
+// ── Вызвать игрока ─────────────────────────────────────────
+async function challengePlayer(opponentId,opponentName){
+  const sb=getSupabaseClient();if(!sb){toast('☁️ Облако недоступно');return;}
+  const myId=localStorage.getItem('fp_user_id');
+  if(!myId){toast('❌ Сначала опубликуй результат в рейтинге');return;}
+  if(duelState){toast('⚔️ Ты уже в дуэли');return;}
+
+  const exercise=currentEx||'pushup';
+  const {data,error}=await sb.from('fp_duels').insert({
+    challenger_id:myId, challenger_name:userName,
+    opponent_id:opponentId, opponent_name:opponentName,
+    exercise, duration:DUEL_DURATION,
+    status:'pending',
+    challenger_score:0, opponent_score:0,
+    created_at:new Date().toISOString()
+  }).select().single();
+
+  if(error||!data){toast('❌ Не удалось отправить вызов');return;}
+  duelData={id:data.id,challengerId:myId,challengerName:userName,
+             opponentId,opponentName,exercise,duration:DUEL_DURATION};
+  duelState='waiting';
+  refreshDuelUI();
+  toast(`⚔️ Вызов отправлен ${opponentName}!`);
+}
+
+// ── Принять дуэль ──────────────────────────────────────────
+async function acceptDuel(){
+  const sb=getSupabaseClient();if(!sb||!duelData.id)return;
+  const{error}=await sb.from('fp_duels').update({status:'active'}).eq('id',duelData.id);
+  if(error){toast('❌ Ошибка принятия дуэли');return;}
+  duelState='active';
+  refreshDuelUI();
+  startDuelTimer();
+  toast('⚔️ Дуэль началась! Поехали!');
+  speakCoachLine('start');
+  startEncourageLoop();
+}
+
+// ── Отклонить дуэль ────────────────────────────────────────
+async function declineDuel(){
+  const sb=getSupabaseClient();if(!sb||!duelData.id)return;
+  await sb.from('fp_duels').update({status:'declined'}).eq('id',duelData.id);
+  duelState=null;duelData={};
+  refreshDuelUI();
+  toast('Дуэль отклонена');
+}
+
+// ── Таймер дуэли ───────────────────────────────────────────
+function startDuelTimer(){
+  duelMyScore=0;duelOpponentScore=0;duelTimeLeft=duelData.duration||DUEL_DURATION;
+  clearInterval(duelTimer);
+  duelTimer=setInterval(async()=>{
+    duelTimeLeft--;
+    updateDuelTimerUI();
+    if(duelTimeLeft<=0){
+      clearInterval(duelTimer);
+      await finishDuel(true);
+    }
+  },1000);
+  // Переключаем упражнение если нужно
+  if(duelData.exercise&&duelData.exercise!==currentEx)setEx(duelData.exercise);
+}
+
+// ── Добавить очко в дуэли (вызывается из addRep) ───────────
+async function addDuelScore(){
+  if(duelState!=='active')return;
+  duelMyScore++;
+  updateDuelScoreUI();
+  // Обновляем свой счёт в Supabase
+  const sb=getSupabaseClient();if(!sb||!duelData.id)return;
+  const myId=localStorage.getItem('fp_user_id');
+  const field=duelData.challengerId===myId?'challenger_score':'opponent_score';
+  await sb.from('fp_duels').update({[field]:duelMyScore}).eq('id',duelData.id);
+}
+
+// ── Финиш дуэли ────────────────────────────────────────────
+async function finishDuel(iAmFinisher){
+  clearInterval(duelTimer);
+  stopEncourageLoop();
+  if(iAmFinisher){
+    const sb=getSupabaseClient();
+    if(sb&&duelData.id)await sb.from('fp_duels').update({status:'finished'}).eq('id',duelData.id);
+  }
+  duelState='finished';
+  const won=duelMyScore>duelOpponentScore;
+  const tied=duelMyScore===duelOpponentScore;
+  if(won){speak(currentLang==='en'?'You won the duel!':'Ты выиграл дуэль!','!');confetti(3000);bRecord();}
+  else if(tied){speak(currentLang==='en'?'It\'s a tie!':'Ничья!','!');}
+  else{speak(currentLang==='en'?'Good fight! Next time!':'Хорошая борьба! В следующий раз!','coach');}
+  if(won){const bonus=50;addXP(bonus);toast(`🏆 Победа в дуэли! +${bonus} XP`);}
+  refreshDuelUI();
+  setTimeout(()=>{duelState=null;duelData={};duelMyScore=0;duelOpponentScore=0;refreshDuelUI();},12000);
+}
+
+// ── UI обновления ───────────────────────────────────────────
+function updateDuelScoreUI(){
+  q('duelMyScore')&&(q('duelMyScore').textContent=duelMyScore);
+  q('duelOpScore')&&(q('duelOpScore').textContent=duelOpponentScore);
+  // Прогресс-бар — лидерство
+  const total=duelMyScore+duelOpponentScore||1;
+  const pct=Math.round(duelMyScore/total*100);
+  if(q('duelProgressFill'))q('duelProgressFill').style.width=pct+'%';
+}
+function updateDuelTimerUI(){
+  const el=q('duelTimer');if(!el)return;
+  const m=Math.floor(duelTimeLeft/60),s=duelTimeLeft%60;
+  el.textContent=`${m}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('urgent',duelTimeLeft<=10);
+}
+function refreshDuelUI(){
+  const host=q('duelHost');if(!host)return;
+  if(!CLOUD_ENABLED){
+    host.innerHTML=`<div class="duel-card" style="opacity:.5;text-align:center;font-size:.82rem;color:var(--text2)">⚔️ Дуэли доступны после публикации результата в рейтинге</div>`;
+    return;
+  }
+  if(!duelState){
+    // Показываем список игроков для вызова
+    renderDuelPlayerList();
+    return;
+  }
+  if(duelState==='incoming'){
+    host.innerHTML=`
+      <div class="duel-incoming">
+        <div style="font-size:2.5rem">⚔️</div>
+        <div style="font-size:1.1rem;font-weight:900;margin:8px 0">${currentLang==='en'?'Duel Challenge!':'Вызов на дуэль!'}</div>
+        <div style="font-size:.88rem;color:var(--text2);margin-bottom:16px">
+          <strong>${duelData.challengerName}</strong> ${currentLang==='en'?'challenges you to':'вызывает тебя:'} ${EX[duelData.exercise]?.name||duelData.exercise} • ${duelData.duration}${currentLang==='en'?'s':'с'}
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="m-btn" onclick="acceptDuel()" style="background:linear-gradient(135deg,var(--primary),var(--secondary))">⚔️ ${currentLang==='en'?'Accept':'Принять'}</button>
+          <button class="btn-sec" onclick="declineDuel()">✕ ${currentLang==='en'?'Decline':'Отклонить'}</button>
+        </div>
+      </div>`;
+    return;
+  }
+  if(duelState==='waiting'){
+    host.innerHTML=`
+      <div class="duel-card" style="text-align:center">
+        <div style="font-size:1.8rem;margin-bottom:8px">⏳</div>
+        <div style="font-weight:700">${currentLang==='en'?'Waiting for':'Ждём'} ${duelData.opponentName}…</div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:6px">${currentLang==='en'?'The duel starts when they accept':'Дуэль начнётся когда они примут вызов'}</div>
+        <button class="btn-sec" style="margin-top:12px" onclick="declineDuel()">✕ ${currentLang==='en'?'Cancel':'Отмена'}</button>
+      </div>`;
+    return;
+  }
+  if(duelState==='active'){
+    const isEn=currentLang==='en';
+    host.innerHTML=`
+      <div class="duel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase">${isEn?'DUEL':'ДУЭЛЬ'} • ${EX[duelData.exercise]?.name||duelData.exercise}</span>
+          <span style="font-size:.72rem;color:var(--accent)">LIVE ●</span>
+        </div>
+        <div id="duelTimer" class="duel-timer">1:00</div>
+        <div class="duel-vs">
+          <div class="duel-player">
+            <div class="duel-player-name">👤 ${userName}</div>
+            <div class="duel-player-score" id="duelMyScore">0</div>
+          </div>
+          <div class="duel-separator">VS</div>
+          <div class="duel-player">
+            <div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div>
+            <div class="duel-player-score" id="duelOpScore">0</div>
+          </div>
+        </div>
+        <div class="duel-progress-wrap">
+          <div class="duel-progress-fill" id="duelProgressFill" style="width:50%"></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--text2);text-align:center;margin-top:6px">${isEn?'Reps count automatically via camera':'Повторения считаются автоматически камерой'}</div>
+      </div>`;
+    updateDuelTimerUI();
+    updateDuelScoreUI();
+    return;
+  }
+  if(duelState==='finished'){
+    const won=duelMyScore>duelOpponentScore;
+    const tied=duelMyScore===duelOpponentScore;
+    const isEn=currentLang==='en';
+    host.innerHTML=`
+      <div class="duel-result duel-card">
+        <div class="duel-result-icon">${won?'🏆':tied?'🤝':'💪'}</div>
+        <div class="duel-result-title" style="color:${won?'var(--primary)':tied?'var(--accent)':'var(--text2)'}">${won?(isEn?'Victory!':'Победа!'):tied?(isEn?'Draw!':'Ничья!'):(isEn?'Good fight!':'Хорошая борьба!')}</div>
+        <div class="duel-vs" style="margin:12px 0">
+          <div class="duel-player"><div class="duel-player-name">👤 ${userName}</div><div class="duel-player-score">${duelMyScore}</div></div>
+          <div class="duel-separator">VS</div>
+          <div class="duel-player"><div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
+        </div>
+        ${won?`<div class="duel-result-sub">+50 XP ${isEn?'bonus':'бонус за победу'} 🎉</div>`:''}
+      </div>`;
+  }
+}
+
+async function renderDuelPlayerList(){
+  const host=q('duelHost');if(!host)return;
+  const isEn=currentLang==='en';
+  host.innerHTML=`<div class="card-title">⚔️ ${isEn?'Challenge a player':'Вызвать игрока'}</div><div id="duelPlayerList"><div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">⏳ ${isEn?'Loading players...':'Загружаем игроков...'}</div></div>`;
+  const sb=getSupabaseClient();if(!sb)return;
+  const myId=localStorage.getItem('fp_user_id');
+  try{
+    const{data}=await sb.from('fp_scores').select('user_id,name,xp,lvl').neq('user_id',myId||'').order('xp',{ascending:false}).limit(10);
+    const list=q('duelPlayerList');if(!list)return;
+    if(!data?.length){list.innerHTML=`<div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">${isEn?'No players online yet. Complete a workout to appear here!':'Нет игроков. Заверши тренировку чтобы появиться здесь!'}</div>`;return;}
+    list.innerHTML=data.map(p=>`
+      <div class="duel-invite-row">
+        <div>
+          <div class="duel-invite-name">${p.name||'Игрок'}</div>
+          <div class="duel-invite-meta">Lv.${p.lvl||1} • ${p.xp||0} XP</div>
+        </div>
+        <button class="duel-challenge-btn" onclick="challengePlayer('${p.user_id}','${(p.name||'Игрок').replace(/'/g,'')}')">⚔️ ${isEn?'Challenge':'Вызвать'}</button>
+      </div>`).join('');
+  }catch(e){
+    const list=q('duelPlayerList');
+    if(list)list.innerHTML=`<div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">${isEn?'Failed to load players':'Не удалось загрузить игроков'}</div>`;
+  }
+}
+
+// ── Хук в addRep — считаем очки дуэли ─────────────────────
+// (вызывается из addRep после tickCombo)
+function hookDuelRep(){if(duelState==='active')addDuelScore();}
 
 // ============================================================
 //  INIT
@@ -2441,5 +2748,24 @@ window.onload=()=>{
   // Auto dark theme
   if(!localStorage.getItem('fp_theme')&&window.matchMedia('(prefers-color-scheme:dark)').matches)setTheme('midnight');
 
+  // ── Ripple на всех кнопках ──────────────────────────────
+  document.addEventListener('pointerdown',e=>{
+    const btn=e.target.closest('.m-btn,.btn-start,.btn-sec,.tab-btn,.ex-card,.icon-btn,.duel-challenge-btn');
+    if(!btn)return;
+    const r=document.createElement('span');
+    r.className='ripple';
+    const rect=btn.getBoundingClientRect();
+    const size=Math.max(rect.width,rect.height)*1.6;
+    r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    btn.appendChild(r);
+    r.addEventListener('animationend',()=>r.remove());
+  });
+
+  // ── Streak hot-pulse если серия ≥ 3 дней ───────────────
+  if(dayStreak>=3)q('dayStreakBanner')?.classList.add('hot');
+
   setEx('pushup');q('debugLine').textContent='Все системы готовы ✅';
+
+  // ── Дуэли — инициализация ───────────────────────────────
+  initDuels();
 };

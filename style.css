@@ -395,3 +395,266 @@ body::after{width:500px;height:500px;background:radial-gradient(circle,rgba(168,
 #streakCalendar{
   margin-top:8px;
 }
+
+/* ============================================================
+   ANIMATED GRADIENT BACKGROUND
+   ============================================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 80% 60% at 20% 20%, var(--primary), transparent 60%),
+              radial-gradient(ellipse 60% 80% at 80% 80%, var(--secondary), transparent 60%),
+              radial-gradient(ellipse 50% 50% at 50% 50%, var(--accent), transparent 70%),
+              var(--bg);
+  opacity: .18;
+  animation: bgPulse 12s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes bgPulse {
+  0%   { opacity: .13; transform: scale(1)   rotate(0deg);  }
+  33%  { opacity: .20; transform: scale(1.04) rotate(1deg);  }
+  66%  { opacity: .15; transform: scale(.97)  rotate(-1deg); }
+  100% { opacity: .18; transform: scale(1.02) rotate(.5deg); }
+}
+
+/* ============================================================
+   MICRO-ANIMATIONS
+   ============================================================ */
+
+/* Ripple на кнопках */
+.m-btn, .btn-start, .btn-sec, .tab-btn, .ex-card, .icon-btn {
+  position: relative;
+  overflow: hidden;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .28);
+  transform: scale(0);
+  animation: rippleAnim .55s linear;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* Card lift при тапе */
+.card {
+  transition: transform .18s cubic-bezier(.4,0,.2,1), box-shadow .18s, border-color .2s;
+}
+.card:active {
+  transform: scale(.985);
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+
+/* Tab slide-in при переключении */
+.tab-content {
+  animation: tabSlideIn .22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes tabSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Кнопки — плавный scale */
+.m-btn, .btn-start, .btn-sec {
+  transition: transform .15s cubic-bezier(.4,0,.2,1), box-shadow .15s, background .15s, color .15s, border-color .15s;
+}
+.m-btn:active, .btn-sec:active {
+  transform: scale(.95);
+}
+.btn-start:active {
+  transform: scale(.96);
+}
+
+/* Иконки вкладок — bounce при активации */
+.tab-btn.active {
+  animation: tabBounce .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes tabBounce {
+  0%  { transform: scale(1); }
+  45% { transform: scale(1.08); }
+  100%{ transform: scale(1); }
+}
+
+/* XP bar — shimmer эффект */
+.xp-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.35) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+  border-radius: inherit;
+}
+.xp-fill { position: relative; overflow: hidden; }
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Счётчик повторений — glow при комбо */
+.counter-combo-glow {
+  text-shadow: 0 0 30px var(--primary), 0 0 60px var(--secondary);
+  transition: text-shadow .3s;
+}
+
+/* Модалки — slide up */
+.modal-box {
+  animation: modalSlide .25s cubic-bezier(.4,0,.2,1);
+}
+@keyframes modalSlide {
+  from { opacity: 0; transform: translateY(24px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);   }
+}
+
+/* Achievement badge — появление */
+.ach-badge.unlocked {
+  animation: achPop .35s cubic-bezier(.4,0,.2,1);
+}
+@keyframes achPop {
+  0%  { transform: scale(.7); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100%{ transform: scale(1); opacity: 1; }
+}
+
+/* Streak banner — pulse когда серия горит */
+.day-streak-banner.hot {
+  animation: streakPulse 2.5s ease-in-out infinite;
+}
+@keyframes streakPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,.0); }
+  50%       { box-shadow: 0 0 18px 4px rgba(168,85,247,.35); }
+}
+
+/* ============================================================
+   ДУЭЛИ
+   ============================================================ */
+.duel-card {
+  background: linear-gradient(135deg, rgba(168,85,247,.15), rgba(124,58,237,.1));
+  border: 1px solid rgba(168,85,247,.4);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.duel-card::before {
+  content: '⚔️';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 5rem;
+  opacity: .07;
+}
+.duel-vs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0;
+}
+.duel-player {
+  flex: 1;
+  text-align: center;
+}
+.duel-player-name {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.duel-player-score {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+}
+.duel-separator {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+.duel-timer {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: .05em;
+  margin: 8px 0;
+  animation: duelTick 1s ease-in-out infinite;
+}
+@keyframes duelTick {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .7; transform: scale(.97); }
+}
+.duel-timer.urgent { color: #ef4444; animation: duelUrgent .4s ease-in-out infinite; }
+@keyframes duelUrgent {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+.duel-progress-wrap {
+  height: 6px;
+  background: rgba(255,255,255,.08);
+  border-radius: 30px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.duel-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 30px;
+  transition: width .5s;
+}
+.duel-result {
+  text-align: center;
+  padding: 20px;
+  border-radius: var(--radius);
+}
+.duel-result-icon { font-size: 3rem; }
+.duel-result-title { font-size: 1.5rem; font-weight: 900; margin: 8px 0; }
+.duel-result-sub { font-size: .85rem; color: var(--text2); }
+.duel-invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--card2);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  transition: border-color .2s;
+}
+.duel-invite-row:hover { border-color: var(--primary); }
+.duel-invite-name { font-size: .88rem; font-weight: 700; }
+.duel-invite-meta { font-size: .72rem; color: var(--text2); }
+.duel-challenge-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border: none;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.duel-challenge-btn:hover { transform: scale(1.05); box-shadow: 0 4px 14px var(--glow); }
+.duel-incoming {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(168,85,247,.2), rgba(236,72,153,.15));
+  border-radius: var(--radius);
+  border: 1px solid rgba(168,85,247,.5);
+  animation: duelIncoming 1.5s ease-in-out infinite;
+}
+@keyframes duelIncoming {
+  0%, 100% { border-color: rgba(168,85,247,.5); box-shadow: 0 0 0 0 rgba(168,85,247,.0); }
+  50%       { border-color: rgba(168,85,247,.9); box-shadow: 0 0 20px 4px rgba(168,85,247,.3); }
+}
