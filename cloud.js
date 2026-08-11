@@ -74,7 +74,7 @@ async function cloudPublishScore({name,avatar,avatarIsPhoto,xp,lvl,maxStreak},on
 async function cloudFetchTop(limit=20,onError){
   if(!CLOUD_ENABLED)return null;
   try{
-    return await sbRequest(`leaders?select=name,avatar,avatar_is_photo,xp,lvl,max_streak,device_id&order=xp.desc&limit=${limit}`,{method:'GET',prefer:''});
+    return await sbRequest(`leaders?select=name,avatar,avatar_is_photo,xp,lvl,max_streak,device_id&order=lvl.desc,xp.desc&limit=${limit}`,{method:'GET',prefer:''});
   }catch(e){console.warn('cloudFetchTop failed',e);if(onError)onError(e);return null;}
 }
 
@@ -82,8 +82,10 @@ async function cloudFetchTop(limit=20,onError){
 async function cloudFetchMyRank(myXp){
   if(!CLOUD_ENABLED)return null;
   try{
-    const better=await sbRequest(`leaders?select=device_id&xp=gt.${myXp}`,{method:'GET',prefer:''});
-    return (better?.length||0)+1;
+    // Позиция = количество игроков с более высоким lvl, или таким же lvl но большим xp
+    const betterLvl=await sbRequest(`leaders?select=device_id&lvl=gt.${myLvl??lvl}`,{method:'GET',prefer:''});
+    const sameLvlBetterXp=await sbRequest(`leaders?select=device_id&lvl=eq.${myLvl??lvl}&xp=gt.${myXp}`,{method:'GET',prefer:''});
+    return ((betterLvl?.length||0)+(sameLvlBetterXp?.length||0))+1;
   }catch(e){return null;}
 }
 

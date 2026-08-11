@@ -1429,7 +1429,7 @@ async function updateLB(){
     }
   }
   if(!players){
-    players=[{name:userName,xp,lvl,avatar,avatarIsPhoto,me:true},...leaderboard].sort((a,b)=>b.xp-a.xp).slice(0,10);
+    players=[{name:userName,xp,lvl,avatar,avatarIsPhoto,me:true},...leaderboard].sort((a,b)=>b.lvl-a.lvl||b.xp-a.xp).slice(0,10);
   }
 
   const statusLine=isCloud
@@ -2479,7 +2479,7 @@ async function renderDuelPlayerList(){
   const sb=getSupabaseClient();if(!sb)return;
   const myId=localStorage.getItem('fp_user_id');
   try{
-    const{data}=await sb.from('fp_scores').select('user_id,name,xp,lvl').neq('user_id',myId||'').order('xp',{ascending:false}).limit(10);
+    const{data}=await sb.from('fp_scores').select('user_id,name,xp,lvl').neq('user_id',myId||'').order('lvl',{ascending:false}).order('xp',{ascending:false}).limit(10);
     const list=q('duelPlayerList');if(!list)return;
     if(!data?.length){list.innerHTML=`<div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">${isEn?'No players online yet. Complete a workout to appear here!':'Нет игроков. Заверши тренировку чтобы появиться здесь!'}</div>`;return;}
     list.innerHTML=data.map(p=>`
