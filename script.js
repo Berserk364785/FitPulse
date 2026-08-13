@@ -2231,7 +2231,6 @@ function initDuels(){
 }
 
 // ── Polling входящих дуэлей (каждые 5 сек) ────────────────
-let duelPollTimer=null;
 async function pollIncomingDuels(){
   clearTimeout(duelPollTimer);
   if(!CLOUD_ENABLED)return;
