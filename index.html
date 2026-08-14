@@ -71,7 +71,7 @@
   <!-- TABS -->
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="train" data-i18n="tabTrain">🏋️ Тренировка</button>
-    <button class="tab-btn" data-tab="duels" data-i18n="tabDuels">⚔️ Дуэли</button>
+    <button class="tab-btn" data-tab="duels" data-i18n="tabDuels" id="tabDuelsBtn">⚔️ Дуэли</button>
     <button class="tab-btn" data-tab="profile" data-i18n="tabProfile">👤 Профиль</button>
     <button class="tab-btn" data-tab="progress" data-i18n="tabProgress">📊 Прогресс</button>
     <button class="tab-btn" data-tab="programs" data-i18n="tabPrograms">📋 Программы</button>
@@ -577,5 +577,30 @@
 <script src="db.js"></script>
 <script src="cloud.js"></script>
 <script src="script.js"></script>
+<!-- DUEL OVERLAY — поверх тренировки во время дуэли -->
+<div id="duelOverlay" style="display:none;position:fixed;top:0;left:0;right:0;z-index:800;pointer-events:none;">
+  <div style="background:linear-gradient(135deg,rgba(10,5,25,.92),rgba(124,58,237,.25));padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(168,85,247,.4);">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:.72rem;font-weight:700;color:#a78bfa;text-transform:uppercase">⚔️ ДУЭЛЬ</span>
+      <span id="duelOverlayTimer" style="font-size:1.3rem;font-weight:900;color:#fff;font-variant-numeric:tabular-nums">1:00</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="text-align:center">
+        <div style="font-size:.65rem;color:#a78bfa">ТЫ</div>
+        <div id="duelOverlayMy" style="font-size:1.4rem;font-weight:900;color:#a78bfa">0</div>
+      </div>
+      <div style="font-size:.9rem;color:#666">VS</div>
+      <div style="text-align:center">
+        <div id="duelOverlayOpName" style="font-size:.65rem;color:#f59e0b;overflow:hidden;max-width:70px;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="duelOverlayOp" style="font-size:1.4rem;font-weight:900;color:#f59e0b">0</div>
+      </div>
+    </div>
+    <button id="duelOverlaySurrender" style="pointer-events:all;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#ef4444;border-radius:8px;padding:4px 10px;font-size:.72rem;cursor:pointer">✕ Сдаться</button>
+  </div>
+  <!-- Прогресс бар -->
+  <div style="height:3px;background:rgba(255,255,255,.1)">
+    <div id="duelOverlayBar" style="height:100%;background:linear-gradient(90deg,#a78bfa,#ec4899);width:50%;transition:width .5s"></div>
+  </div>
+</div>
 </body>
 </html>

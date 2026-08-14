@@ -2261,14 +2261,26 @@ async function pollIncomingDuels(){
                   exercise:d.exercise,duration:d.duration||DUEL_DURATION};
         duelState='incoming';
         refreshDuelUI();
+        // Звук вызова
+        beep(880,.15);setTimeout(()=>beep(1100,.15),200);setTimeout(()=>beep(880,.15),400);
+        // Мигание вкладки Дуэли
+        let blinkCount=0;
+        const blinkInterval=setInterval(()=>{
+          const btn=q('tabDuelsBtn');if(!btn){clearInterval(blinkInterval);return;}
+          btn.style.background=blinkCount%2===0?'rgba(168,85,247,.5)':'';
+          if(++blinkCount>10)clearInterval(blinkInterval);
+        },400);
+        // Уведомление если есть разрешение
         if(Notification.permission==='granted'&&document.visibilityState!=='visible'){
           new Notification('⚔️ Вызов на дуэль!',{body:`${d.challenger_name} вызывает тебя!`,icon:'./icon-192.png'});
         }
-        toast(`⚔️ ${d.challenger_name} вызывает тебя на дуэль!`,4000);
+        toast(`⚔️ ${d.challenger_name} вызывает тебя на дуэль!`,5000);
       }
     }
   }catch(e){/* тихо игнорируем ошибки сети */}
-  duelPollTimer=setTimeout(pollIncomingDuels,5000);
+  // Скорость polling: 2 сек в активной дуэли/ожидании, 5 сек иначе
+  const pollDelay=(duelState==='active'||duelState==='waiting'||duelState==='incoming')?2000:5000;
+  duelPollTimer=setTimeout(pollIncomingDuels,pollDelay);
 }
 
 // ── Вызвать игрока ─────────────────────────────────────────
@@ -2310,18 +2322,39 @@ async function declineDuel(){
   if(duelData.id){
     try{await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'declined'})});}catch(e){}
   }
-  duelState=null;duelData={};clearInterval(duelTimer);refreshDuelUI();toast('Дуэль отменена');
+  duelState=null;duelData={};clearInterval(duelTimer);
+  const ov=q('duelOverlay');if(ov)ov.style.display='none';
+  refreshDuelUI();toast('Дуэль отменена');
 }
 
 // ── Таймер дуэли ───────────────────────────────────────────
 function startDuelTimer(){
   duelMyScore=0;duelOpponentScore=0;duelTimeLeft=duelData.duration||DUEL_DURATION;
   clearInterval(duelTimer);
+
+  // Переключаемся на вкладку тренировки и запускаем камеру
+  openTab('train');
+  if(duelData.exercise&&duelData.exercise!==currentEx)setEx(duelData.exercise);
+  if(!isRunning){
+    countdown(()=>currentMode==='camera'?startCam():startVid());
+  }
+
+  // Показываем duel overlay
+  const ov=q('duelOverlay');
+  if(ov){
+    ov.style.display='block';
+    const opNameEl=q('duelOverlayOpName');
+    if(opNameEl)opNameEl.textContent=duelData.opponentName||duelData.challengerName||'?';
+    q('duelOverlaySurrender')?.addEventListener('click',()=>{declineDuel();},{ once:true });
+  }
+
   duelTimer=setInterval(async()=>{
-    duelTimeLeft--;updateDuelTimerUI();
+    duelTimeLeft--;
+    updateDuelTimerUI();
+    updateDuelOverlayUI();
     if(duelTimeLeft<=0){clearInterval(duelTimer);await finishDuel(true);}
   },1000);
-  if(duelData.exercise&&duelData.exercise!==currentEx)setEx(duelData.exercise);
+  updateDuelTimerUI();
 }
 
 // ── Добавить очко в дуэли ──────────────────────────────────
@@ -2339,6 +2372,8 @@ async function addDuelScore(){
 // ── Финиш дуэли ────────────────────────────────────────────
 async function finishDuel(iAmFinisher){
   clearInterval(duelTimer);stopEncourageLoop();
+  // Скрываем оверлей
+  const ov=q('duelOverlay');if(ov)ov.style.display='none';
   if(iAmFinisher&&duelData.id){
     try{await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'finished'})});}catch(e){}
   }
@@ -2348,6 +2383,8 @@ async function finishDuel(iAmFinisher){
   else if(tied){speak(currentLang==='en'?'It\'s a tie!':'Ничья!','!');}
   else{speak(currentLang==='en'?'Good fight!':'Хорошая борьба!','coach');}
   if(won){addXP(50);toast('🏆 Победа в дуэли! +50 XP');}
+  // Переключаемся на вкладку дуэлей показать результат
+  openTab('duels');
   refreshDuelUI();
   setTimeout(()=>{duelState=null;duelData={};duelMyScore=0;duelOpponentScore=0;refreshDuelUI();},12000);
 }
@@ -2359,6 +2396,15 @@ function updateDuelScoreUI(){
   if(myEl)myEl.textContent=duelMyScore;
   if(opEl)opEl.textContent=duelOpponentScore;
   if(bar){const total=duelMyScore+duelOpponentScore||1;bar.style.width=Math.round(duelMyScore/total*100)+'%';}
+  updateDuelOverlayUI();
+}
+function updateDuelOverlayUI(){
+  if(q('duelOverlayMy'))q('duelOverlayMy').textContent=duelMyScore;
+  if(q('duelOverlayOp'))q('duelOverlayOp').textContent=duelOpponentScore;
+  const bar=q('duelOverlayBar');
+  if(bar){const total=duelMyScore+duelOpponentScore||1;bar.style.width=Math.round(duelMyScore/total*100)+'%';}
+  const timerEl=q('duelOverlayTimer');
+  if(timerEl){const m=Math.floor(duelTimeLeft/60),s=duelTimeLeft%60;timerEl.textContent=`${m}:${String(s).padStart(2,'0')}`;timerEl.style.color=duelTimeLeft<=10?'#ef4444':'#fff';}
 }
 function updateDuelTimerUI(){
   const el=q('duelTimer');if(!el)return;
