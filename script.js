@@ -2353,6 +2353,100 @@ async function finishDuel(iAmFinisher){
 }
 
 // ── Загрузка списка игроков ────────────────────────────────
+// ── UI функции ─────────────────────────────────────────────
+function updateDuelScoreUI(){
+  const myEl=q('duelMyScore'),opEl=q('duelOpScore'),bar=q('duelProgressFill');
+  if(myEl)myEl.textContent=duelMyScore;
+  if(opEl)opEl.textContent=duelOpponentScore;
+  if(bar){const total=duelMyScore+duelOpponentScore||1;bar.style.width=Math.round(duelMyScore/total*100)+'%';}
+}
+function updateDuelTimerUI(){
+  const el=q('duelTimer');if(!el)return;
+  const m=Math.floor(duelTimeLeft/60),s=duelTimeLeft%60;
+  el.textContent=`${m}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('urgent',duelTimeLeft<=10);
+}
+function hookDuelRep(){if(duelState==='active')addDuelScore();}
+
+function refreshDuelUI(){
+  const host=q('duelHost');if(!host)return;
+  const isEn=currentLang==='en';
+
+  if(!duelState){renderDuelPlayerList();return;}
+
+  if(duelState==='incoming'){
+    host.innerHTML=`
+      <div class="duel-incoming">
+        <div style="font-size:2.5rem">⚔️</div>
+        <div style="font-size:1.1rem;font-weight:900;margin:8px 0">${isEn?'Duel Challenge!':'Вызов на дуэль!'}</div>
+        <div style="font-size:.88rem;color:var(--text2);margin-bottom:16px">
+          <strong>${duelData.challengerName}</strong> ${isEn?'challenges you:':'вызывает тебя:'} ${EX[duelData.exercise]?.name||duelData.exercise} · ${duelData.duration}${isEn?'s':'с'}
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="m-btn" onclick="acceptDuel()" style="background:linear-gradient(135deg,var(--primary),var(--secondary))">⚔️ ${isEn?'Accept':'Принять'}</button>
+          <button class="btn-sec" onclick="declineDuel()">✕ ${isEn?'Decline':'Отклонить'}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(duelState==='waiting'){
+    host.innerHTML=`
+      <div class="duel-card" style="text-align:center;padding:24px">
+        <div style="font-size:2rem;margin-bottom:10px">⏳</div>
+        <div style="font-weight:700;font-size:1rem">${isEn?'Waiting for':'Ждём'} <strong>${duelData.opponentName}</strong>…</div>
+        <div style="font-size:.78rem;color:var(--text2);margin-top:6px">${isEn?'Duel starts when they accept':'Дуэль начнётся когда примут вызов'}</div>
+        <button class="btn-sec" style="margin-top:16px" onclick="declineDuel()">✕ ${isEn?'Cancel':'Отмена'}</button>
+      </div>`;
+    return;
+  }
+
+  if(duelState==='active'){
+    host.innerHTML=`
+      <div class="duel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase">⚔️ ${isEn?'DUEL':'ДУЭЛЬ'} · ${EX[duelData.exercise]?.name||duelData.exercise}</span>
+          <span style="font-size:.72rem;color:#22c55e;animation:duelTick 1s infinite">● LIVE</span>
+        </div>
+        <div id="duelTimer" class="duel-timer">1:00</div>
+        <div class="duel-vs">
+          <div class="duel-player">
+            <div class="duel-player-name">👤 ${userName}</div>
+            <div class="duel-player-score" id="duelMyScore">0</div>
+          </div>
+          <div class="duel-separator">VS</div>
+          <div class="duel-player">
+            <div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div>
+            <div class="duel-player-score" id="duelOpScore">0</div>
+          </div>
+        </div>
+        <div class="duel-progress-wrap">
+          <div class="duel-progress-fill" id="duelProgressFill" style="width:50%"></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--text2);text-align:center;margin-top:6px">${isEn?'Reps counted automatically by camera':'Повторения считаются камерой автоматически'}</div>
+      </div>`;
+    updateDuelTimerUI();updateDuelScoreUI();
+    return;
+  }
+
+  if(duelState==='finished'){
+    const won=duelMyScore>duelOpponentScore,tied=duelMyScore===duelOpponentScore;
+    host.innerHTML=`
+      <div class="duel-result duel-card">
+        <div class="duel-result-icon">${won?'🏆':tied?'🤝':'💪'}</div>
+        <div class="duel-result-title" style="color:${won?'var(--primary)':tied?'var(--accent)':'var(--text2)'}">
+          ${won?(isEn?'Victory!':'Победа!'):tied?(isEn?'Draw!':'Ничья!'):(isEn?'Good fight!':'Хорошая борьба!')}
+        </div>
+        <div class="duel-vs" style="margin:12px 0">
+          <div class="duel-player"><div class="duel-player-name">👤 ${userName}</div><div class="duel-player-score">${duelMyScore}</div></div>
+          <div class="duel-separator">VS</div>
+          <div class="duel-player"><div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
+        </div>
+        ${won?`<div class="duel-result-sub">+50 XP ${isEn?'victory bonus':'бонус за победу'} 🎉</div>`:''}
+      </div>`;
+  }
+}
+
 async function renderDuelPlayerList(){
   const host=q('duelHost');if(!host)return;
   const isEn=currentLang==='en';
