@@ -177,7 +177,7 @@ function setupDailyReminder() {
 let currentLang='ru';
 const I18N={
   ru:{
-    appName:'FitPulse',menuTitle:'Меню',tabTrain:'🏋️ Тренировка',tabProfile:'👤 Профиль',tabProgress:'📊 Прогресс',tabPrograms:'📋 Программы',tabCommunity:'🏆 Рейтинг',
+    appName:'FitPulse',menuTitle:'Меню',tabTrain:'🏋️ Тренировка',tabDuels:'⚔️ Дуэли',tabProfile:'👤 Профиль',tabProgress:'📊 Прогресс',tabPrograms:'📋 Программы',tabCommunity:'🏆 Рейтинг',
     exerciseTitle:'Упражнение',goalLabel:'🎯 Цель:',modeCam:'📷 Камера',modeVid:'🎥 Видео',
     btnStart:'🚀 СТАРТ',btnReset:'🔄 Сброс',btnPause:'⏸️ Пауза',btnStop:'⏹️ Стоп',btnHiit:'⚡ HIIT',btnTimer:'⏱️ Таймер',btnVoice:'🎙️ Голос',
     profileSettings:'Настройки профиля',nameLabel:'Имя',weightLabel:'Вес (кг)',heightLabel:'Рост (см)',btnSave:'💾 Сохранить',
@@ -235,7 +235,7 @@ const I18N={
     allExercises:'📋 Все упражнения',
   },
   en:{
-    appName:'FitPulse',menuTitle:'Menu',tabTrain:'🏋️ Workout',tabProfile:'👤 Profile',tabProgress:'📊 Progress',tabPrograms:'📋 Programs',tabCommunity:'🏆 Leaderboard',
+    appName:'FitPulse',menuTitle:'Menu',tabTrain:'🏋️ Workout',tabDuels:'⚔️ Duels',tabProfile:'👤 Profile',tabProgress:'📊 Progress',tabPrograms:'📋 Programs',tabCommunity:'🏆 Leaderboard',
     exerciseTitle:'Exercise',goalLabel:'🎯 Goal:',modeCam:'📷 Camera',modeVid:'🎥 Video',
     btnStart:'🚀 START',btnReset:'🔄 Reset',btnPause:'⏸️ Pause',btnStop:'⏹️ Stop',btnHiit:'⚡ HIIT',btnTimer:'⏱️ Timer',btnVoice:'🎙️ Voice',
     profileSettings:'Profile Settings',nameLabel:'Name',weightLabel:'Weight (kg)',heightLabel:'Height (cm)',btnSave:'💾 Save',
@@ -1792,7 +1792,8 @@ function openTab(id){
   }
   if(id==='progress'){drawChart();buildChartTabs();}
   if(id==='profile')updateLvlUI();
-  if(id==='community'){updateLB();updateSharePreview();refreshCommunityChallengeUI();refreshTeamRoomUI();refreshDuelUI();}
+  if(id==='duels'){refreshDuelUI();}
+  if(id==='community'){updateLB();updateSharePreview();refreshCommunityChallengeUI();refreshTeamRoomUI();}
 }
 
 // ============================================================
