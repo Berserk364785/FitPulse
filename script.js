@@ -2242,7 +2242,7 @@ async function pollIncomingDuels(){
         const rows=await sbRequest(`fp_duels?id=eq.${duelData.id}&select=*`,{method:'GET',prefer:''});
         const d=rows?.[0];
         if(d){
-          const myId=localStorage.getItem('fp_user_id')||getDeviceId();
+          const myId=getDeviceId();
           duelOpponentScore=d.challenger_id===myId?Number(d.opponent_score||0):Number(d.challenger_score||0);
           if(d.status==='active'&&duelState==='waiting'){duelState='active';startDuelTimer();}
           if(d.status==='finished'&&duelState==='active'){duelState='finished';finishDuel(false);}
@@ -2252,7 +2252,7 @@ async function pollIncomingDuels(){
       }
     } else if(!duelState){
       // Ищем входящий вызов
-      const myId=localStorage.getItem('fp_user_id')||getDeviceId();
+      const myId=getDeviceId();
       const rows=await sbRequest(`fp_duels?opponent_id=eq.${myId}&status=eq.pending&select=*&order=created_at.desc&limit=1`,{method:'GET',prefer:''});
       const d=rows?.[0];
       if(d&&(!duelData.id||duelData.id!==d.id)){
@@ -2286,7 +2286,7 @@ async function pollIncomingDuels(){
 // ── Вызвать игрока ─────────────────────────────────────────
 async function challengePlayer(opponentId,opponentName){
   if(!CLOUD_ENABLED){toast('☁️ Облако недоступно');return;}
-  const myId=localStorage.getItem('fp_user_id')||getDeviceId();
+  const myId=getDeviceId();
   if(duelState){toast('⚔️ Ты уже в дуэли');return;}
   const exercise=currentEx||'pushup';
   try{
@@ -2324,6 +2324,7 @@ async function declineDuel(){
   }
   duelState=null;duelData={};clearInterval(duelTimer);
   const ov=q('duelOverlay');if(ov)ov.style.display='none';
+  document.body.classList.remove('duel-active');
   refreshDuelUI();toast('Дуэль отменена');
 }
 
@@ -2343,8 +2344,9 @@ function startDuelTimer(){
   const ov=q('duelOverlay');
   if(ov){
     ov.style.display='block';
+    document.body.classList.add('duel-active');
     const opNameEl=q('duelOverlayOpName');
-    if(opNameEl)opNameEl.textContent=duelData.opponentName||duelData.challengerName||'?';
+    if(opNameEl)opNameEl.textContent=((getDeviceId())===duelData.challengerId?duelData.opponentName:duelData.challengerName)||'?';
     q('duelOverlaySurrender')?.addEventListener('click',()=>{declineDuel();},{ once:true });
   }
 
@@ -2363,7 +2365,7 @@ async function addDuelScore(){
   duelMyScore++;updateDuelScoreUI();
   if(!duelData.id)return;
   try{
-    const myDevId=localStorage.getItem('fp_user_id')||getDeviceId();
+    const myDevId=getDeviceId();
     const field=duelData.challengerId===myDevId?'challenger_score':'opponent_score';
     await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({[field]:duelMyScore})});
   }catch(e){}
@@ -2374,6 +2376,7 @@ async function finishDuel(iAmFinisher){
   clearInterval(duelTimer);stopEncourageLoop();
   // Скрываем оверлей
   const ov=q('duelOverlay');if(ov)ov.style.display='none';
+  document.body.classList.remove('duel-active');
   if(iAmFinisher&&duelData.id){
     try{await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'finished'})});}catch(e){}
   }
@@ -2462,7 +2465,7 @@ function refreshDuelUI(){
           </div>
           <div class="duel-separator">VS</div>
           <div class="duel-player">
-            <div class="duel-player-name">👤 ${(localStorage.getItem('fp_user_id')||getDeviceId())===duelData.challengerId?duelData.opponentName:duelData.challengerName}</div>
+            <div class="duel-player-name">👤 ${(getDeviceId())===duelData.challengerId?duelData.opponentName||'Соперник':duelData.challengerName||'Соперник'}</div>
             <div class="duel-player-score" id="duelOpScore">0</div>
           </div>
         </div>
@@ -2486,7 +2489,7 @@ function refreshDuelUI(){
         <div class="duel-vs" style="margin:12px 0">
           <div class="duel-player"><div class="duel-player-name">👤 ${userName}</div><div class="duel-player-score">${duelMyScore}</div></div>
           <div class="duel-separator">VS</div>
-          <div class="duel-player"><div class="duel-player-name">👤 ${(localStorage.getItem('fp_user_id')||getDeviceId())===duelData.challengerId?duelData.opponentName:duelData.challengerName}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
+          <div class="duel-player"><div class="duel-player-name">👤 ${(getDeviceId())===duelData.challengerId?duelData.opponentName||'Соперник':duelData.challengerName||'Соперник'}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
         </div>
         ${won?`<div class="duel-result-sub">+50 XP ${isEn?'victory bonus':'бонус за победу'} 🎉</div>`:''}
       </div>`;
@@ -2499,7 +2502,7 @@ async function renderDuelPlayerList(){
   host.innerHTML=`<div class="card-title">⚔️ ${isEn?'Challenge a player':'Вызвать игрока'}</div><div id="duelPlayerList"><div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">⏳ ${isEn?'Loading...':'Загружаем...'}</div></div>`;
   if(!CLOUD_ENABLED){q('duelPlayerList').innerHTML=`<div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">${isEn?'Cloud not configured':'Облако не настроено'}</div>`;return;}
   try{
-    const myId=localStorage.getItem('fp_user_id')||getDeviceId();
+    const myId=getDeviceId();
     const data=await sbRequest(`leaders?select=device_id,name,xp,lvl&order=lvl.desc,xp.desc&limit=15`,{method:'GET',prefer:''});
     const players=(data||[]).filter(p=>p.device_id!==myId).slice(0,10);
     const list=q('duelPlayerList');if(!list)return;
