@@ -2363,8 +2363,8 @@ async function addDuelScore(){
   duelMyScore++;updateDuelScoreUI();
   if(!duelData.id)return;
   try{
-    const myId=localStorage.getItem('fp_user_id')||getDeviceId();
-    const field=duelData.challengerId===myId?'challenger_score':'opponent_score';
+    const myDevId=localStorage.getItem('fp_user_id')||getDeviceId();
+    const field=duelData.challengerId===myDevId?'challenger_score':'opponent_score';
     await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({[field]:duelMyScore})});
   }catch(e){}
 }
@@ -2462,7 +2462,7 @@ function refreshDuelUI(){
           </div>
           <div class="duel-separator">VS</div>
           <div class="duel-player">
-            <div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div>
+            <div class="duel-player-name">👤 ${(localStorage.getItem('fp_user_id')||getDeviceId())===duelData.challengerId?duelData.opponentName:duelData.challengerName}</div>
             <div class="duel-player-score" id="duelOpScore">0</div>
           </div>
         </div>
@@ -2486,7 +2486,7 @@ function refreshDuelUI(){
         <div class="duel-vs" style="margin:12px 0">
           <div class="duel-player"><div class="duel-player-name">👤 ${userName}</div><div class="duel-player-score">${duelMyScore}</div></div>
           <div class="duel-separator">VS</div>
-          <div class="duel-player"><div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
+          <div class="duel-player"><div class="duel-player-name">👤 ${(localStorage.getItem('fp_user_id')||getDeviceId())===duelData.challengerId?duelData.opponentName:duelData.challengerName}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
         </div>
         ${won?`<div class="duel-result-sub">+50 XP ${isEn?'victory bonus':'бонус за победу'} 🎉</div>`:''}
       </div>`;
