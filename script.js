@@ -1136,6 +1136,8 @@ function stopActiveSource(){
 }
 async function startCam(){
   try{
+    q('debugLine').textContent=currentLang==='en'?'⏳ Loading AI model...':'⏳ Загружаем AI-модель...';
+    q('bigNum').style.opacity='.3';
     await loadMP();
     stopActiveSource();
     q('debugLine').textContent='Инициализация...';
@@ -1147,11 +1149,12 @@ async function startCam(){
     await cam.start();
     const setSz=()=>{if(vid.videoWidth){const cv=q('canvas');cv.width=vid.videoWidth;cv.height=vid.videoHeight;}else requestAnimationFrame(setSz);};setSz();
     isRunning=true;isPaused=false;setCtrl(true);startSes();startChallenge();hintFor(currentEx);
+    q('bigNum').style.opacity='1';
     q('debugLine').textContent='Камера активна';toast('📷 Камера готова');
     speak(currentLang==='en'?'Camera ready! Let\'s go!':'Камера готова! Погнали!');
     setTimeout(()=>speakCoachLine('start'),1200);
     startEncourageLoop();
-  }catch(e){toast('⚠️ '+e.message,5000);q('debugLine').textContent='Ошибка: '+e.message;}
+  }catch(e){q('bigNum').style.opacity='1';toast('⚠️ '+e.message,5000);q('debugLine').textContent='Ошибка: '+e.message;}
 }
 async function startVid(){
   const vu=q('vidUp');if(!vu.src){toast('Выберите видео — нажмите «📁 Загрузить»',3500);return;}
@@ -1800,10 +1803,25 @@ function openTab(id){
 //  UTIL
 // ============================================================
 function q(id){return document.getElementById(id);}
+let _toastTimer=null,_toastQueue=[];
 function toast(txt,dur=2500){
   const el=q('vidToast');if(!el)return;
+  // Дедупликация — не показываем одинаковый тост дважды подряд
+  if(el.textContent===txt&&el.classList.contains('show'))return;
+  _toastQueue.push({txt,dur});
+  if(_toastQueue.length===1)_runToast();
+}
+function _runToast(){
+  if(!_toastQueue.length)return;
+  const{txt,dur}=_toastQueue[0];
+  const el=q('vidToast');if(!el){_toastQueue=[];return;}
   el.textContent=txt;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),dur);
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{
+    el.classList.remove('show');
+    _toastQueue.shift();
+    setTimeout(_runToast,200); // небольшая пауза между тостами
+  },dur);
 }
 // ============================================================
 //  VOICE COACH (speak)
@@ -2227,8 +2245,24 @@ const DUEL_DURATION = 60; // секунд
 // ── Инициализация ──────────────────────────────────────────
 function initDuels(){
   if(!CLOUD_ENABLED)return;
-  pollIncomingDuels(); // polling вместо Realtime (не требует SDK)
+  // Пауза polling когда вкладка скрыта — экономим батарею
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){clearTimeout(duelPollTimer);}
+    else{pollIncomingDuels();}
+  });
+  pollIncomingDuels();
   refreshDuelUI();
+  // Очищаем старые завершённые дуэли раз в сессию
+  cleanupOldDuels();
+}
+
+async function cleanupOldDuels(){
+  if(!CLOUD_ENABLED)return;
+  try{
+    // Удаляем дуэли старше 24 часов со статусом finished/declined
+    const cutoff=new Date(Date.now()-86400000).toISOString();
+    await sbRequest(`fp_duels?created_at=lt.${cutoff}&status=in.(finished,declined,pending)`,{method:'DELETE',prefer:''});
+  }catch(e){/* тихо */}
 }
 
 // ── Polling входящих дуэлей (каждые 5 сек) ────────────────
@@ -2242,9 +2276,12 @@ async function pollIncomingDuels(){
         const rows=await sbRequest(`fp_duels?id=eq.${duelData.id}&select=*`,{method:'GET',prefer:''});
         const d=rows?.[0];
         if(d){
-          const myId=getDeviceId();
+          const myId=localStorage.getItem('fp_user_id')||getDeviceId();
           duelOpponentScore=d.challenger_id===myId?Number(d.opponent_score||0):Number(d.challenger_score||0);
-          if(d.status==='active'&&duelState==='waiting'){duelState='active';startDuelTimer();}
+          if(d.status==='active'&&duelState==='waiting'){
+            duelData.startedAt=d.started_at||null;
+            duelState='active';startDuelTimer();
+          }
           if(d.status==='finished'&&duelState==='active'){duelState='finished';finishDuel(false);}
           if(d.status==='declined'&&duelState==='waiting'){duelState=null;duelData={};toast('❌ Вызов отклонён');refreshDuelUI();}
           updateDuelScoreUI();
@@ -2252,7 +2289,7 @@ async function pollIncomingDuels(){
       }
     } else if(!duelState){
       // Ищем входящий вызов
-      const myId=getDeviceId();
+      const myId=localStorage.getItem('fp_user_id')||getDeviceId();
       const rows=await sbRequest(`fp_duels?opponent_id=eq.${myId}&status=eq.pending&select=*&order=created_at.desc&limit=1`,{method:'GET',prefer:''});
       const d=rows?.[0];
       if(d&&(!duelData.id||duelData.id!==d.id)){
@@ -2284,10 +2321,14 @@ async function pollIncomingDuels(){
 }
 
 // ── Вызвать игрока ─────────────────────────────────────────
+let _challengePending=false;
 async function challengePlayer(opponentId,opponentName){
   if(!CLOUD_ENABLED){toast('☁️ Облако недоступно');return;}
-  const myId=getDeviceId();
   if(duelState){toast('⚔️ Ты уже в дуэли');return;}
+  if(_challengePending){toast('⏳ Подождите...');return;}
+  _challengePending=true;
+  document.querySelectorAll('.duel-challenge-btn').forEach(b=>{b.disabled=true;b.style.opacity='.5';});
+  const myId=getDeviceId();
   const exercise=currentEx||'pushup';
   try{
     const data=await sbRequest('fp_duels',{
@@ -2304,14 +2345,21 @@ async function challengePlayer(opponentId,opponentName){
     duelState='waiting';
     refreshDuelUI();
     toast(`⚔️ Вызов отправлен ${opponentName}!`);
-  }catch(e){toast('❌ Не удалось отправить вызов: '+e.message);}
+  }catch(e){
+    toast('❌ Не удалось отправить вызов: '+e.message);
+    document.querySelectorAll('.duel-challenge-btn').forEach(b=>{b.disabled=false;b.style.opacity='1';});
+  }finally{
+    _challengePending=false;
+  }
 }
 
 // ── Принять дуэль ──────────────────────────────────────────
 async function acceptDuel(){
   if(!duelData.id)return;
+  const startedAt=new Date().toISOString();
   try{
-    await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'active'})});
+    await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'active',started_at:startedAt})});
+    duelData.startedAt=startedAt;
     duelState='active';refreshDuelUI();startDuelTimer();
     toast('⚔️ Дуэль началась! Поехали!');speakCoachLine('start');startEncourageLoop();
   }catch(e){toast('❌ Ошибка: '+e.message);}
@@ -2324,14 +2372,22 @@ async function declineDuel(){
   }
   duelState=null;duelData={};clearInterval(duelTimer);
   const ov=q('duelOverlay');if(ov)ov.style.display='none';
-  document.body.classList.remove('duel-active');
   refreshDuelUI();toast('Дуэль отменена');
 }
 
 // ── Таймер дуэли ───────────────────────────────────────────
 function startDuelTimer(){
-  duelMyScore=0;duelOpponentScore=0;duelTimeLeft=duelData.duration||DUEL_DURATION;
+  duelMyScore=0;duelOpponentScore=0;
   clearInterval(duelTimer);
+
+  // Синхронизация таймера от started_at — оба игрока стартуют от одной точки
+  const duration=duelData.duration||DUEL_DURATION;
+  if(duelData.startedAt){
+    const elapsed=Math.floor((Date.now()-new Date(duelData.startedAt).getTime())/1000);
+    duelTimeLeft=Math.max(0,duration-elapsed);
+  } else {
+    duelTimeLeft=duration;
+  }
 
   // Переключаемся на вкладку тренировки и запускаем камеру
   openTab('train');
@@ -2346,9 +2402,11 @@ function startDuelTimer(){
     ov.style.display='block';
     document.body.classList.add('duel-active');
     const opNameEl=q('duelOverlayOpName');
-    if(opNameEl)opNameEl.textContent=((getDeviceId())===duelData.challengerId?duelData.opponentName:duelData.challengerName)||'?';
-    q('duelOverlaySurrender')?.addEventListener('click',()=>{declineDuel();},{ once:true });
+    if(opNameEl)opNameEl.textContent=(getDeviceId()===duelData.challengerId?duelData.opponentName:duelData.challengerName)||'?';
+    q('duelOverlaySurrender')?.addEventListener('click',()=>{declineDuel();},{once:true});
   }
+
+  if(duelTimeLeft<=0){finishDuel(true);return;}
 
   duelTimer=setInterval(async()=>{
     duelTimeLeft--;
@@ -2357,6 +2415,7 @@ function startDuelTimer(){
     if(duelTimeLeft<=0){clearInterval(duelTimer);await finishDuel(true);}
   },1000);
   updateDuelTimerUI();
+  updateDuelOverlayUI();
 }
 
 // ── Добавить очко в дуэли ──────────────────────────────────
@@ -2365,8 +2424,8 @@ async function addDuelScore(){
   duelMyScore++;updateDuelScoreUI();
   if(!duelData.id)return;
   try{
-    const myDevId=getDeviceId();
-    const field=duelData.challengerId===myDevId?'challenger_score':'opponent_score';
+    const myId=localStorage.getItem('fp_user_id')||getDeviceId();
+    const field=duelData.challengerId===myId?'challenger_score':'opponent_score';
     await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({[field]:duelMyScore})});
   }catch(e){}
 }
@@ -2376,7 +2435,6 @@ async function finishDuel(iAmFinisher){
   clearInterval(duelTimer);stopEncourageLoop();
   // Скрываем оверлей
   const ov=q('duelOverlay');if(ov)ov.style.display='none';
-  document.body.classList.remove('duel-active');
   if(iAmFinisher&&duelData.id){
     try{await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'finished'})});}catch(e){}
   }
@@ -2465,7 +2523,7 @@ function refreshDuelUI(){
           </div>
           <div class="duel-separator">VS</div>
           <div class="duel-player">
-            <div class="duel-player-name">👤 ${(getDeviceId())===duelData.challengerId?duelData.opponentName||'Соперник':duelData.challengerName||'Соперник'}</div>
+            <div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div>
             <div class="duel-player-score" id="duelOpScore">0</div>
           </div>
         </div>
@@ -2489,7 +2547,7 @@ function refreshDuelUI(){
         <div class="duel-vs" style="margin:12px 0">
           <div class="duel-player"><div class="duel-player-name">👤 ${userName}</div><div class="duel-player-score">${duelMyScore}</div></div>
           <div class="duel-separator">VS</div>
-          <div class="duel-player"><div class="duel-player-name">👤 ${(getDeviceId())===duelData.challengerId?duelData.opponentName||'Соперник':duelData.challengerName||'Соперник'}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
+          <div class="duel-player"><div class="duel-player-name">👤 ${duelData.opponentName||duelData.challengerName}</div><div class="duel-player-score">${duelOpponentScore}</div></div>
         </div>
         ${won?`<div class="duel-result-sub">+50 XP ${isEn?'victory bonus':'бонус за победу'} 🎉</div>`:''}
       </div>`;
@@ -2502,7 +2560,7 @@ async function renderDuelPlayerList(){
   host.innerHTML=`<div class="card-title">⚔️ ${isEn?'Challenge a player':'Вызвать игрока'}</div><div id="duelPlayerList"><div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">⏳ ${isEn?'Loading...':'Загружаем...'}</div></div>`;
   if(!CLOUD_ENABLED){q('duelPlayerList').innerHTML=`<div style="color:var(--text2);font-size:.82rem;text-align:center;padding:16px">${isEn?'Cloud not configured':'Облако не настроено'}</div>`;return;}
   try{
-    const myId=getDeviceId();
+    const myId=localStorage.getItem('fp_user_id')||getDeviceId();
     const data=await sbRequest(`leaders?select=device_id,name,xp,lvl&order=lvl.desc,xp.desc&limit=15`,{method:'GET',prefer:''});
     const players=(data||[]).filter(p=>p.device_id!==myId).slice(0,10);
     const list=q('duelPlayerList');if(!list)return;
