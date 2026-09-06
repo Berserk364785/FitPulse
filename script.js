@@ -208,7 +208,7 @@ const I18N={
     hubSettings:'⚙️ Настройки',hubSettingsSub:'Камера, голос, отображение',
     hubFaq:'❓ Как пользоваться',hubFaqSub:'FAQ и приветствие',
     hubFeedback:'💬 Обратная связь',hubFeedbackSub:'Отзыв, идея или вопрос',
-    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v7',
+    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v8',
     // community
     teamDesc:'Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете',
     createRoom:'Создать',joinRoom:'Войти',shareRoomBtn:'🔗 Поделиться',leaveRoom:'Покинуть команду',
@@ -266,7 +266,7 @@ const I18N={
     hubSettings:'⚙️ Settings',hubSettingsSub:'Camera, voice, display',
     hubFaq:'❓ How to use',hubFaqSub:'FAQ & welcome',
     hubFeedback:'💬 Feedback',hubFeedbackSub:'Review, idea or question',
-    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v7',
+    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v8',
     // community
     teamDesc:'Create a room or join by code — compete with people you know',
     createRoom:'Create',joinRoom:'Join',shareRoomBtn:'🔗 Share',leaveRoom:'Leave team',
@@ -2101,8 +2101,19 @@ function toggleQuest(id){document.getElementById(id)?.classList.toggle('collapse
 // запись в начало CHANGELOG (новые сверху). Модалка покажется автоматически
 // один раз тем, у кого в localStorage записана более старая версия —
 // включая существующих пользователей, которые ещё не видели апдейт.
-const CURRENT_VERSION=7;
+const CURRENT_VERSION=8;
 const CHANGELOG=[
+  {v:8,date:'Август 2026',items:[
+    '🚀 Новый многошаговый онбординг — 4 шага с анимацией: приветствие, советы по позиции, уровень и язык',
+    '🌐 Выбор языка прямо при первом входе — не нужно лезть в настройки',
+    '🔍 Полный SEO — title, description, keywords, Open Graph, Twitter Card и JSON-LD structured data для Google',
+    '⚡ Синхронизация таймера дуэлей — оба игрока стартуют от одной временной метки',
+    '😴 Polling дуэлей паузируется когда вкладка скрыта — экономит батарею',
+    '🔕 Дедупликация уведомлений — одинаковые тосты не дублируются',
+    '🛡️ Защита от двойного нажатия «Вызвать» в дуэлях',
+    '🧹 Автоочистка старых дуэлей из Supabase раз в сессию',
+    '⏳ Индикатор загрузки AI-модели перед стартом камеры',
+  ]},
   {v:7,date:'Август 2026',items:[
     '⚔️ Дуэли в реальном времени — вызови любого игрока из лидерборда на 60-секундный поединок',
     '📡 Live-счёт дуэли — видишь прогресс соперника в реальном времени через Supabase Realtime',
@@ -2607,8 +2618,25 @@ window.onload=()=>{
     speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
   }
 
-  // Onboarding
-  if(!localStorage.getItem('fp_onboarded')){q('onboardOv').classList.add('visible');}
+  // ── Онбординг — многошаговый ───────────────────────────
+  let onboardPage=0;
+  const ONBOARD_PAGES=4;
+
+  function onboardGoTo(page){
+    onboardPage=page;
+    document.querySelectorAll('.onboard-step-page').forEach(p=>p.classList.toggle('active',+p.dataset.page===page));
+    document.querySelectorAll('.onboard-dot').forEach(d=>d.classList.toggle('active',+d.dataset.step===page));
+    const backBtn=q('onboardBackBtn');
+    const nextBtn=q('onboardNextBtn');
+    if(backBtn)backBtn.style.visibility=page===0?'hidden':'visible';
+    if(nextBtn)nextBtn.textContent=page===ONBOARD_PAGES-1?'🚀 Начать':'Далее →';
+  }
+
+  if(!localStorage.getItem('fp_onboarded')){
+    q('onboardOv').classList.add('visible');
+    onboardGoTo(0);
+  }
+
   let selectedFitnessLevel='intermediate';
   document.querySelectorAll('.onboard-level-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -2616,11 +2644,34 @@ window.onload=()=>{
       document.querySelectorAll('.onboard-level-btn').forEach(b=>b.classList.toggle('active',b===btn));
     });
   });
-  q('onboardBtn')?.addEventListener('click',()=>{
-    applyFitnessLevelDefaults(selectedFitnessLevel);
-    q('onboardOv').classList.remove('visible');localStorage.setItem('fp_onboarded','1');checkChangelog();
+
+  document.querySelectorAll('.onboard-lang-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.onboard-lang-btn').forEach(b=>b.classList.toggle('active',b===btn));
+      applyLanguage(btn.dataset.lang);
+    });
   });
-  q('replayOnboardBtn')?.addEventListener('click',()=>{closeModal('faqModalWrap');q('onboardOv').classList.add('visible');});
+
+  q('onboardNextBtn')?.addEventListener('click',()=>{
+    if(onboardPage<ONBOARD_PAGES-1){
+      onboardGoTo(onboardPage+1);
+    } else {
+      applyFitnessLevelDefaults(selectedFitnessLevel);
+      q('onboardOv').classList.remove('visible');
+      localStorage.setItem('fp_onboarded','1');
+      checkChangelog();
+    }
+  });
+
+  q('onboardBackBtn')?.addEventListener('click',()=>{
+    if(onboardPage>0)onboardGoTo(onboardPage-1);
+  });
+
+  q('replayOnboardBtn')?.addEventListener('click',()=>{
+    closeModal('faqModalWrap');
+    onboardGoTo(0);
+    q('onboardOv').classList.add('visible');
+  });
 
   // Показываем «Что нового» существующим пользователям (у новых уже открыт онбординг,
   // им покажем changelog сразу после того, как они его закроют — см. onboardBtn выше)

@@ -4,53 +4,159 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#a855f7">
-  <meta name="description" content="FitPulse — умный AI-тренер с анализом позы, голосовым коучем и онлайн-рейтингом">
-  <link rel="manifest" href="manifest.json">
-  <title>FitPulse</title>
-  <link rel="stylesheet" href="style.css">
 
-  <!-- Favicon / App icons -->
+  <!-- Primary SEO -->
+  <title>FitPulse — AI-тренер с анализом движений | Бесплатно</title>
+  <meta name="description" content="FitPulse — бесплатный AI-фитнес тренер. Камера считает повторения автоматически, голосовой коуч корректирует технику в реальном времени. Отжимания, приседания, планка и ещё 4 упражнения. Работает прямо в браузере.">
+  <meta name="keywords" content="фитнес тренер, AI тренер, счётчик повторений, домашние тренировки, отжимания, приседания, планка, анализ движений, голосовой тренер, workout tracker, fitness app">
+  <meta name="author" content="FitPulse">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://berserk364785.github.io/FitPulse/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FitPulse">
+  <meta property="og:url" content="https://berserk364785.github.io/FitPulse/">
+  <meta property="og:title" content="FitPulse — AI-тренер считает повторения камерой">
+  <meta property="og:description" content="Бесплатный AI-тренер прямо в браузере. Камера отслеживает технику, голосовой коуч подсказывает в реальном времени. Зарабатывай XP, бей рекорды, соревнуйся с друзьями.">
+  <meta property="og:image" content="https://berserk364785.github.io/FitPulse/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:locale" content="ru_RU">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FitPulse — AI-тренер считает повторения камерой">
+  <meta name="twitter:description" content="Бесплатный AI-тренер в браузере. Камера + голосовой коуч + онлайн-рейтинг.">
+  <meta name="twitter:image" content="https://berserk364785.github.io/FitPulse/icon-512.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitPulse">
+
+  <!-- Icons -->
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
-  <!-- Open Graph / соцсети -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="FitPulse — AI-тренер с анализом позы">
-  <meta property="og:description" content="Камера отслеживает технику, голосовой коуч подсказывает в реальном времени, онлайн-рейтинг покажет ваш прогресс среди других.">
-  <meta property="og:image" content="og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FitPulse",
+    "url": "https://berserk364785.github.io/FitPulse/",
+    "description": "Бесплатный AI-фитнес тренер с анализом движений через камеру, голосовым коучем и онлайн-рейтингом.",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "RUB"
+    },
+    "featureList": [
+      "Автоматический счёт повторений через камеру",
+      "Анализ техники в реальном времени",
+      "Голосовой коуч",
+      "7 упражнений: отжимания, приседания, планка и другие",
+      "XP, уровни, достижения",
+      "Онлайн-рейтинг и дуэли",
+      "Работает оффлайн (PWA)"
+    ],
+    "screenshot": "https://berserk364785.github.io/FitPulse/icon-512.png",
+    "inLanguage": ["ru", "en"]
+  }
+  </script>
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="FitPulse — AI-тренер с анализом позы">
-  <meta name="twitter:description" content="Камера, голосовой коуч и онлайн-рейтинг — тренируйтесь умнее.">
-  <meta name="twitter:image" content="og-image.png">
-</head>
+  <link rel="stylesheet" href="style.css">
 <body class="theme-violet">
 
-<!-- ONBOARDING -->
+<!-- ONBOARDING — многошаговый -->
 <div id="onboardOv" class="onboard-ov">
   <div class="onboard-card">
-    <div class="onboard-logo">💪</div>
-    <div class="onboard-h">FitPulse</div>
-    <div class="onboard-sub">AI-тренер с анализом движений в реальном времени</div>
-    <div class="onboard-steps">
-      <div class="onboard-step"><span class="onboard-step-ico">📷</span><div class="onboard-step-txt"><strong>Выберите упражнение</strong> и нажмите «Старт» — камера отследит движения</div></div>
-      <div class="onboard-step"><span class="onboard-step-ico">📐</span><div class="onboard-step-txt"><strong>Встаньте боком</strong> к камере, всё тело в кадре</div></div>
-      <div class="onboard-step"><span class="onboard-step-ico">🏆</span><div class="onboard-step-txt"><strong>Зарабатывайте XP</strong>, выполняйте задания, бейте рекорды!</div></div>
+
+    <!-- Прогресс-точки -->
+    <div class="onboard-dots">
+      <span class="onboard-dot active" data-step="0"></span>
+      <span class="onboard-dot" data-step="1"></span>
+      <span class="onboard-dot" data-step="2"></span>
+      <span class="onboard-dot" data-step="3"></span>
     </div>
-    <div class="onboard-level-label">Ваш уровень подготовки?</div>
-    <div class="onboard-level-options" id="onboardLevelOptions">
-      <button class="onboard-level-btn" data-level="beginner">🌱<span>Новичок</span></button>
-      <button class="onboard-level-btn active" data-level="intermediate">💪<span>Средний</span></button>
-      <button class="onboard-level-btn" data-level="advanced">🔥<span>Продвинутый</span></button>
+
+    <!-- ШАГ 0 — Приветствие -->
+    <div class="onboard-step-page active" data-page="0">
+      <div class="onboard-hero">💪</div>
+      <div class="onboard-h">FitPulse</div>
+      <div class="onboard-sub">Бесплатный AI‑тренер прямо в браузере — никаких загрузок</div>
+      <div class="onboard-features">
+        <div class="onboard-feat"><span>📷</span><span>Камера считает повторения автоматически</span></div>
+        <div class="onboard-feat"><span>🗣️</span><span>Голосовой коуч корректирует технику</span></div>
+        <div class="onboard-feat"><span>🏆</span><span>XP, уровни и дуэли с другими игроками</span></div>
+        <div class="onboard-feat"><span>📴</span><span>Работает без интернета</span></div>
+      </div>
     </div>
-    <button class="onboard-btn" id="onboardBtn">Начать 🚀</button>
+
+    <!-- ШАГ 1 — Как встать -->
+    <div class="onboard-step-page" data-page="1">
+      <div class="onboard-hero" style="font-size:4rem">🧍</div>
+      <div class="onboard-h" style="font-size:1.4rem">Как встать перед камерой</div>
+      <div class="onboard-tips">
+        <div class="onboard-tip good">✅ Встаньте <strong>боком</strong> — всё тело в кадре</div>
+        <div class="onboard-tip good">✅ Расстояние <strong>1–2 метра</strong> от камеры</div>
+        <div class="onboard-tip good">✅ Хорошее <strong>освещение</strong> спереди</div>
+        <div class="onboard-tip bad">❌ Не стойте <strong>лицом</strong> к камере</div>
+        <div class="onboard-tip bad">❌ Избегайте <strong>тёмного фона</strong></div>
+      </div>
+    </div>
+
+    <!-- ШАГ 2 — Уровень -->
+    <div class="onboard-step-page" data-page="2">
+      <div class="onboard-hero">🎯</div>
+      <div class="onboard-h" style="font-size:1.4rem">Ваш уровень подготовки?</div>
+      <div class="onboard-sub">Подберём задания под вас</div>
+      <div class="onboard-level-options" id="onboardLevelOptions">
+        <button class="onboard-level-btn" data-level="beginner">
+          <span class="onboard-level-ico">🌱</span>
+          <span class="onboard-level-name">Новичок</span>
+          <span class="onboard-level-desc">до 10 повт.</span>
+        </button>
+        <button class="onboard-level-btn active" data-level="intermediate">
+          <span class="onboard-level-ico">💪</span>
+          <span class="onboard-level-name">Средний</span>
+          <span class="onboard-level-desc">10–30 повт.</span>
+        </button>
+        <button class="onboard-level-btn" data-level="advanced">
+          <span class="onboard-level-ico">🔥</span>
+          <span class="onboard-level-name">Продвинутый</span>
+          <span class="onboard-level-desc">30+ повт.</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ШАГ 3 — Язык + старт -->
+    <div class="onboard-step-page" data-page="3">
+      <div class="onboard-hero">🚀</div>
+      <div class="onboard-h" style="font-size:1.4rem">Всё готово!</div>
+      <div class="onboard-sub">Выберите язык интерфейса</div>
+      <div class="onboard-lang-row">
+        <button class="onboard-lang-btn active" data-lang="ru">🇷🇺 Русский</button>
+        <button class="onboard-lang-btn" data-lang="en">🇬🇧 English</button>
+      </div>
+      <div class="onboard-final-tip">
+        Нажмите <strong>«Начать»</strong> — камера запросит разрешение при первой тренировке
+      </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="onboard-nav">
+      <button class="onboard-back" id="onboardBackBtn" style="visibility:hidden">← Назад</button>
+      <button class="onboard-btn" id="onboardNextBtn">Далее →</button>
+    </div>
+
   </div>
 </div>
 
@@ -426,7 +532,7 @@
       <button class="m-btn ghost menu-hub-item" id="hubSettingsBtn" id="hubSettingsBtnText">⚙️ Настройки <span class="menu-hub-sub" data-i18n="hubSettingsSub">Камера, голос, отображение</span></button>
       <button class="m-btn ghost menu-hub-item" id="hubFaqBtn" data-i18n="hubFaq">❓ Как пользоваться <span class="menu-hub-sub" data-i18n="hubFaqSub">FAQ и приветствие</span></button>
       <button class="m-btn ghost menu-hub-item" id="hubFeedbackBtn" data-i18n="hubFeedback">💬 Обратная связь <span class="menu-hub-sub" data-i18n="hubFeedbackSub">Отзыв, идея или вопрос</span></button>
-      <button class="m-btn ghost menu-hub-item" id="hubChangelogBtn" data-i18n="hubChangelog">✨ Что нового <span class="menu-hub-sub" data-i18n="hubChangelogSub">История обновлений v7</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubChangelogBtn" data-i18n="hubChangelog">✨ Что нового <span class="menu-hub-sub" data-i18n="hubChangelogSub">История обновлений v8</span></button>
     </div>
   </div>
 </div>
