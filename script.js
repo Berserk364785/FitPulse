@@ -208,7 +208,7 @@ const I18N={
     hubSettings:'⚙️ Настройки',hubSettingsSub:'Камера, голос, отображение',
     hubFaq:'❓ Как пользоваться',hubFaqSub:'FAQ и приветствие',
     hubFeedback:'💬 Обратная связь',hubFeedbackSub:'Отзыв, идея или вопрос',
-    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v8',
+    hubChangelog:'✨ Что нового',hubChangelogSub:'История обновлений v7',
     // community
     teamDesc:'Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете',
     createRoom:'Создать',joinRoom:'Войти',shareRoomBtn:'🔗 Поделиться',leaveRoom:'Покинуть команду',
@@ -266,7 +266,7 @@ const I18N={
     hubSettings:'⚙️ Settings',hubSettingsSub:'Camera, voice, display',
     hubFaq:'❓ How to use',hubFaqSub:'FAQ & welcome',
     hubFeedback:'💬 Feedback',hubFeedbackSub:'Review, idea or question',
-    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v8',
+    hubChangelog:'✨ What\'s New',hubChangelogSub:'Update history v7',
     // community
     teamDesc:'Create a room or join by code — compete with people you know',
     createRoom:'Create',joinRoom:'Join',shareRoomBtn:'🔗 Share',leaveRoom:'Leave team',
@@ -952,10 +952,14 @@ function drawSkel(lm){
   const qualText=q('qualityBadge')?.textContent||'';
   const isPerfect=qualText.includes('✅');
   const isWarn=qualText.includes('⚠️');
-  // Градиент по качеству: зелёный → жёлтый → красный
-  const strokeColor=isPerfect?'rgba(34,197,94,.9)':isWarn?'rgba(251,191,36,.9)':'rgba(239,68,68,.8)';
-  const dotColor=isPerfect?'#22c55e':isWarn?'#fbbf24':'#ef4444';
-  const glowColor=isPerfect?'rgba(34,197,94,.35)':isWarn?'rgba(251,191,36,.25)':'rgba(239,68,68,.2)';
+  const isNeutral=qualText.includes('👍');
+  // ✅ зелёный = отличная техника/исходная позиция
+  // ⚠️ жёлтый = не дожимает
+  // 👍 синий  = в процессе движения (норм)
+  // иначе    = серый (нет данных)
+  const strokeColor=isPerfect?'rgba(34,197,94,.9)':isWarn?'rgba(251,191,36,.9)':isNeutral?'rgba(99,179,237,.85)':'rgba(148,163,184,.6)';
+  const dotColor=isPerfect?'#22c55e':isWarn?'#fbbf24':isNeutral?'#63b3ed':'#94a3b8';
+  const glowColor=isPerfect?'rgba(34,197,94,.35)':isWarn?'rgba(251,191,36,.25)':isNeutral?'rgba(99,179,237,.2)':'rgba(148,163,184,.1)';
   // Glow под скелетом
   c.shadowColor=glowColor;c.shadowBlur=isPerfect?18:8;
   c.strokeStyle=strokeColor;c.lineWidth=isPerfect?3.5:3;c.lineCap='round';
@@ -1088,9 +1092,21 @@ function onResults(res){
     }
   }
 
-  const nearTop=inverted?sa<uT+10:sa>uT-10;
-  const tooShallow=inverted?sa>dT-20:sa<dT+20;
-  const qual=(!isDown&&nearTop)?'✅ Идеально':(isDown&&tooShallow)?'⚠️ Глубоко':'👍 Норма';
+  // Цвет скелета = правильность техники в текущий момент:
+  // ✅ зелёный — в нижней точке (isDown) угол достаточно глубокий ИЛИ в верхней точке угол правильный
+  // ⚠️ жёлтый — в нижней точке угол недостаточно глубокий (не дожимает)
+  // 👍 синий  — в процессе движения между фазами, всё норм
+  // ❌ красный не используем для техники (только для потери позы)
+  let qual;
+  if(isDown){
+    // Нижняя фаза: проверяем достиг ли нужной глубины
+    const deepEnough=inverted?repExtremum>=dT-5:repExtremum<=dT+5;
+    qual=deepEnough?'✅ Отлично':'⚠️ Глубже!';
+  } else {
+    // Верхняя фаза: в исходном положении или поднимается
+    const atTop=inverted?sa<=uT+15:sa>=uT-15;
+    qual=atTop?'✅ Исходная':'👍 Движение';
+  }
   q('qualityBadge').textContent=qual;
   runTechniqueCoach(lm,sa,dT,uT);
   q('debugLine').textContent=`Угол: ${Math.round(sa)}° | Уверенность: ${Math.round((lm[11]?.visibility||0)*100)}%`;
@@ -1136,8 +1152,6 @@ function stopActiveSource(){
 }
 async function startCam(){
   try{
-    q('debugLine').textContent=currentLang==='en'?'⏳ Loading AI model...':'⏳ Загружаем AI-модель...';
-    q('bigNum').style.opacity='.3';
     await loadMP();
     stopActiveSource();
     q('debugLine').textContent='Инициализация...';
@@ -1149,12 +1163,11 @@ async function startCam(){
     await cam.start();
     const setSz=()=>{if(vid.videoWidth){const cv=q('canvas');cv.width=vid.videoWidth;cv.height=vid.videoHeight;}else requestAnimationFrame(setSz);};setSz();
     isRunning=true;isPaused=false;setCtrl(true);startSes();startChallenge();hintFor(currentEx);
-    q('bigNum').style.opacity='1';
     q('debugLine').textContent='Камера активна';toast('📷 Камера готова');
     speak(currentLang==='en'?'Camera ready! Let\'s go!':'Камера готова! Погнали!');
     setTimeout(()=>speakCoachLine('start'),1200);
     startEncourageLoop();
-  }catch(e){q('bigNum').style.opacity='1';toast('⚠️ '+e.message,5000);q('debugLine').textContent='Ошибка: '+e.message;}
+  }catch(e){toast('⚠️ '+e.message,5000);q('debugLine').textContent='Ошибка: '+e.message;}
 }
 async function startVid(){
   const vu=q('vidUp');if(!vu.src){toast('Выберите видео — нажмите «📁 Загрузить»',3500);return;}
@@ -1803,25 +1816,10 @@ function openTab(id){
 //  UTIL
 // ============================================================
 function q(id){return document.getElementById(id);}
-let _toastTimer=null,_toastQueue=[];
 function toast(txt,dur=2500){
   const el=q('vidToast');if(!el)return;
-  // Дедупликация — не показываем одинаковый тост дважды подряд
-  if(el.textContent===txt&&el.classList.contains('show'))return;
-  _toastQueue.push({txt,dur});
-  if(_toastQueue.length===1)_runToast();
-}
-function _runToast(){
-  if(!_toastQueue.length)return;
-  const{txt,dur}=_toastQueue[0];
-  const el=q('vidToast');if(!el){_toastQueue=[];return;}
   el.textContent=txt;el.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(()=>{
-    el.classList.remove('show');
-    _toastQueue.shift();
-    setTimeout(_runToast,200); // небольшая пауза между тостами
-  },dur);
+  setTimeout(()=>el.classList.remove('show'),dur);
 }
 // ============================================================
 //  VOICE COACH (speak)
@@ -2101,19 +2099,8 @@ function toggleQuest(id){document.getElementById(id)?.classList.toggle('collapse
 // запись в начало CHANGELOG (новые сверху). Модалка покажется автоматически
 // один раз тем, у кого в localStorage записана более старая версия —
 // включая существующих пользователей, которые ещё не видели апдейт.
-const CURRENT_VERSION=8;
+const CURRENT_VERSION=7;
 const CHANGELOG=[
-  {v:8,date:'Август 2026',items:[
-    '🚀 Новый многошаговый онбординг — 4 шага с анимацией: приветствие, советы по позиции, уровень и язык',
-    '🌐 Выбор языка прямо при первом входе — не нужно лезть в настройки',
-    '🔍 Полный SEO — title, description, keywords, Open Graph, Twitter Card и JSON-LD structured data для Google',
-    '⚡ Синхронизация таймера дуэлей — оба игрока стартуют от одной временной метки',
-    '😴 Polling дуэлей паузируется когда вкладка скрыта — экономит батарею',
-    '🔕 Дедупликация уведомлений — одинаковые тосты не дублируются',
-    '🛡️ Защита от двойного нажатия «Вызвать» в дуэлях',
-    '🧹 Автоочистка старых дуэлей из Supabase раз в сессию',
-    '⏳ Индикатор загрузки AI-модели перед стартом камеры',
-  ]},
   {v:7,date:'Август 2026',items:[
     '⚔️ Дуэли в реальном времени — вызови любого игрока из лидерборда на 60-секундный поединок',
     '📡 Live-счёт дуэли — видишь прогресс соперника в реальном времени через Supabase Realtime',
@@ -2256,24 +2243,8 @@ const DUEL_DURATION = 60; // секунд
 // ── Инициализация ──────────────────────────────────────────
 function initDuels(){
   if(!CLOUD_ENABLED)return;
-  // Пауза polling когда вкладка скрыта — экономим батарею
-  document.addEventListener('visibilitychange',()=>{
-    if(document.hidden){clearTimeout(duelPollTimer);}
-    else{pollIncomingDuels();}
-  });
-  pollIncomingDuels();
+  pollIncomingDuels(); // polling вместо Realtime (не требует SDK)
   refreshDuelUI();
-  // Очищаем старые завершённые дуэли раз в сессию
-  cleanupOldDuels();
-}
-
-async function cleanupOldDuels(){
-  if(!CLOUD_ENABLED)return;
-  try{
-    // Удаляем дуэли старше 24 часов со статусом finished/declined
-    const cutoff=new Date(Date.now()-86400000).toISOString();
-    await sbRequest(`fp_duels?created_at=lt.${cutoff}&status=in.(finished,declined,pending)`,{method:'DELETE',prefer:''});
-  }catch(e){/* тихо */}
 }
 
 // ── Polling входящих дуэлей (каждые 5 сек) ────────────────
@@ -2289,10 +2260,7 @@ async function pollIncomingDuels(){
         if(d){
           const myId=localStorage.getItem('fp_user_id')||getDeviceId();
           duelOpponentScore=d.challenger_id===myId?Number(d.opponent_score||0):Number(d.challenger_score||0);
-          if(d.status==='active'&&duelState==='waiting'){
-            duelData.startedAt=d.started_at||null;
-            duelState='active';startDuelTimer();
-          }
+          if(d.status==='active'&&duelState==='waiting'){duelState='active';startDuelTimer();}
           if(d.status==='finished'&&duelState==='active'){duelState='finished';finishDuel(false);}
           if(d.status==='declined'&&duelState==='waiting'){duelState=null;duelData={};toast('❌ Вызов отклонён');refreshDuelUI();}
           updateDuelScoreUI();
@@ -2332,14 +2300,10 @@ async function pollIncomingDuels(){
 }
 
 // ── Вызвать игрока ─────────────────────────────────────────
-let _challengePending=false;
 async function challengePlayer(opponentId,opponentName){
   if(!CLOUD_ENABLED){toast('☁️ Облако недоступно');return;}
+  const myId=localStorage.getItem('fp_user_id')||getDeviceId();
   if(duelState){toast('⚔️ Ты уже в дуэли');return;}
-  if(_challengePending){toast('⏳ Подождите...');return;}
-  _challengePending=true;
-  document.querySelectorAll('.duel-challenge-btn').forEach(b=>{b.disabled=true;b.style.opacity='.5';});
-  const myId=getDeviceId();
   const exercise=currentEx||'pushup';
   try{
     const data=await sbRequest('fp_duels',{
@@ -2356,21 +2320,14 @@ async function challengePlayer(opponentId,opponentName){
     duelState='waiting';
     refreshDuelUI();
     toast(`⚔️ Вызов отправлен ${opponentName}!`);
-  }catch(e){
-    toast('❌ Не удалось отправить вызов: '+e.message);
-    document.querySelectorAll('.duel-challenge-btn').forEach(b=>{b.disabled=false;b.style.opacity='1';});
-  }finally{
-    _challengePending=false;
-  }
+  }catch(e){toast('❌ Не удалось отправить вызов: '+e.message);}
 }
 
 // ── Принять дуэль ──────────────────────────────────────────
 async function acceptDuel(){
   if(!duelData.id)return;
-  const startedAt=new Date().toISOString();
   try{
-    await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'active',started_at:startedAt})});
-    duelData.startedAt=startedAt;
+    await sbRequest(`fp_duels?id=eq.${duelData.id}`,{method:'PATCH',prefer:'',body:JSON.stringify({status:'active'})});
     duelState='active';refreshDuelUI();startDuelTimer();
     toast('⚔️ Дуэль началась! Поехали!');speakCoachLine('start');startEncourageLoop();
   }catch(e){toast('❌ Ошибка: '+e.message);}
@@ -2388,17 +2345,8 @@ async function declineDuel(){
 
 // ── Таймер дуэли ───────────────────────────────────────────
 function startDuelTimer(){
-  duelMyScore=0;duelOpponentScore=0;
+  duelMyScore=0;duelOpponentScore=0;duelTimeLeft=duelData.duration||DUEL_DURATION;
   clearInterval(duelTimer);
-
-  // Синхронизация таймера от started_at — оба игрока стартуют от одной точки
-  const duration=duelData.duration||DUEL_DURATION;
-  if(duelData.startedAt){
-    const elapsed=Math.floor((Date.now()-new Date(duelData.startedAt).getTime())/1000);
-    duelTimeLeft=Math.max(0,duration-elapsed);
-  } else {
-    duelTimeLeft=duration;
-  }
 
   // Переключаемся на вкладку тренировки и запускаем камеру
   openTab('train');
@@ -2411,13 +2359,10 @@ function startDuelTimer(){
   const ov=q('duelOverlay');
   if(ov){
     ov.style.display='block';
-    document.body.classList.add('duel-active');
     const opNameEl=q('duelOverlayOpName');
-    if(opNameEl)opNameEl.textContent=(getDeviceId()===duelData.challengerId?duelData.opponentName:duelData.challengerName)||'?';
-    q('duelOverlaySurrender')?.addEventListener('click',()=>{declineDuel();},{once:true});
+    if(opNameEl)opNameEl.textContent=duelData.opponentName||duelData.challengerName||'?';
+    q('duelOverlaySurrender')?.addEventListener('click',()=>{declineDuel();},{ once:true });
   }
-
-  if(duelTimeLeft<=0){finishDuel(true);return;}
 
   duelTimer=setInterval(async()=>{
     duelTimeLeft--;
@@ -2426,7 +2371,6 @@ function startDuelTimer(){
     if(duelTimeLeft<=0){clearInterval(duelTimer);await finishDuel(true);}
   },1000);
   updateDuelTimerUI();
-  updateDuelOverlayUI();
 }
 
 // ── Добавить очко в дуэли ──────────────────────────────────
@@ -2618,25 +2562,8 @@ window.onload=()=>{
     speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
   }
 
-  // ── Онбординг — многошаговый ───────────────────────────
-  let onboardPage=0;
-  const ONBOARD_PAGES=4;
-
-  function onboardGoTo(page){
-    onboardPage=page;
-    document.querySelectorAll('.onboard-step-page').forEach(p=>p.classList.toggle('active',+p.dataset.page===page));
-    document.querySelectorAll('.onboard-dot').forEach(d=>d.classList.toggle('active',+d.dataset.step===page));
-    const backBtn=q('onboardBackBtn');
-    const nextBtn=q('onboardNextBtn');
-    if(backBtn)backBtn.style.visibility=page===0?'hidden':'visible';
-    if(nextBtn)nextBtn.textContent=page===ONBOARD_PAGES-1?'🚀 Начать':'Далее →';
-  }
-
-  if(!localStorage.getItem('fp_onboarded')){
-    q('onboardOv').classList.add('visible');
-    onboardGoTo(0);
-  }
-
+  // Onboarding
+  if(!localStorage.getItem('fp_onboarded')){q('onboardOv').classList.add('visible');}
   let selectedFitnessLevel='intermediate';
   document.querySelectorAll('.onboard-level-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -2644,34 +2571,11 @@ window.onload=()=>{
       document.querySelectorAll('.onboard-level-btn').forEach(b=>b.classList.toggle('active',b===btn));
     });
   });
-
-  document.querySelectorAll('.onboard-lang-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.onboard-lang-btn').forEach(b=>b.classList.toggle('active',b===btn));
-      applyLanguage(btn.dataset.lang);
-    });
+  q('onboardBtn')?.addEventListener('click',()=>{
+    applyFitnessLevelDefaults(selectedFitnessLevel);
+    q('onboardOv').classList.remove('visible');localStorage.setItem('fp_onboarded','1');checkChangelog();
   });
-
-  q('onboardNextBtn')?.addEventListener('click',()=>{
-    if(onboardPage<ONBOARD_PAGES-1){
-      onboardGoTo(onboardPage+1);
-    } else {
-      applyFitnessLevelDefaults(selectedFitnessLevel);
-      q('onboardOv').classList.remove('visible');
-      localStorage.setItem('fp_onboarded','1');
-      checkChangelog();
-    }
-  });
-
-  q('onboardBackBtn')?.addEventListener('click',()=>{
-    if(onboardPage>0)onboardGoTo(onboardPage-1);
-  });
-
-  q('replayOnboardBtn')?.addEventListener('click',()=>{
-    closeModal('faqModalWrap');
-    onboardGoTo(0);
-    q('onboardOv').classList.add('visible');
-  });
+  q('replayOnboardBtn')?.addEventListener('click',()=>{closeModal('faqModalWrap');q('onboardOv').classList.add('visible');});
 
   // Показываем «Что нового» существующим пользователям (у новых уже открыт онбординг,
   // им покажем changelog сразу после того, как они его закроют — см. onboardBtn выше)
