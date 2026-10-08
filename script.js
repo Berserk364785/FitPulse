@@ -15,7 +15,7 @@ let xp=0,lvl=1,streak=0,maxStreak=0;
 let dayStreak=0,lastWorkoutDate=null; // streak по ДНЯМ (не путать со streak повторений выше)
 let avatar='🏆',avatarIsPhoto=false,lastEmojiAvatar='🏆';
 let dailyQuests=[],dailyQuestDate=null,dailyChallenge={},leaderboard=[];
-let sesStart=0,sesCal=0,sesTimerInt=null;
+let sesStart=0,sesCal=0,sesTimerInt=null,sessionNewRecord=null;
 let sesAngleSum=0,sesAngleCount=0; // для графика "качество техники со временем" — средний угол на нижней точке движения за сессию
 let workoutTimerInt=null,hiitInt=null;
 let frameId=null,blobUrl=null;
@@ -476,6 +476,7 @@ function addPlankCal(dt){
 // ============================================================
 function startSes(){
   sesStart=Date.now();sesCal=caloriesBurned;
+  sessionNewRecord=null;
   // Инициализация античита для этой сессии
   sessionStartXp=xp+(lvl-1)*100;
   sessionStartTs=Date.now();
@@ -846,14 +847,11 @@ function addRep(){
     const prevRecord=prRecords[currentEx]||0;
     const diff=repCount-prevRecord;
     prRecords[currentEx]=repCount;
-    if(prevRecord===0){
-      speakCoachLine('newRecord');toast('🏆 Первый личный рекорд!');bRecord();
-    }else{
-      speakCoachLine('recordBeaten',diff);
-      toast(`🏆 Рекорд! ${repCount} — это на ${diff} больше прошлых ${prevRecord}`,3500);
-      bRecord();
-    }
-    confetti(2000);save();updatePRList();
+    // Сохраняем рекорд для объявления после тренировки
+    sessionNewRecord={exercise:currentEx,count:repCount,prev:prevRecord,diff};
+    // Тихий тост — без голоса, без мелодии, чтобы не отвлекать
+    toast(prevRecord===0?`🏆 Первый рекорд! ${repCount} повт.`:`🏆 Рекорд бит! ${repCount} (+${diff})`,2000);
+    confetti(1500);save();updatePRList();
   }
   if(navigator.vibrate)navigator.vibrate(40);
 }
@@ -1313,6 +1311,20 @@ function stopAll(){
   const didWork=repCount>0||plankTime>0;
   if(didWork){
     speakCoachLine('finish');
+    // Объявляем рекорд после тренировки с задержкой — чтобы не перебивать финальную фразу
+    if(sessionNewRecord){
+      const rec=sessionNewRecord;
+      setTimeout(()=>{
+        if(rec.prev===0){
+          speakCoachLine('newRecord');
+        } else {
+          speakCoachLine('recordBeaten',rec.diff);
+        }
+        bRecord();
+        confetti(2500);
+      },2200);
+      sessionNewRecord=null;
+    }
     saveSet(true);updateDayStreak();recordWorkoutDate();checkOvertraining();maybeRewardReferrer();flushCommunityProgress();flushTeamProgress();setupDailyReminder();toast('✅ Тренировка сохранена');publishToCloud(true);
   }else toast('Стоп');
   comboCount=0;hideComboUI();stopEncourageLoop();
