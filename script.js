@@ -2623,8 +2623,25 @@ document.addEventListener('DOMContentLoaded',()=>{
     speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
   }
 
-  // Onboarding
-  if(!localStorage.getItem('fp_onboarded')){q('onboardOv').classList.add('visible');}
+  // ── Онбординг — многошаговый ──────────────────────────────
+  let onboardPage=0;
+  const ONBOARD_PAGES=4;
+
+  function onboardGoTo(page){
+    onboardPage=page;
+    document.querySelectorAll('.onboard-step-page').forEach(p=>p.classList.toggle('active',+p.dataset.page===page));
+    document.querySelectorAll('.onboard-dot').forEach(d=>d.classList.toggle('active',+d.dataset.step===page));
+    const backBtn=q('onboardBackBtn');
+    const nextBtn=q('onboardNextBtn');
+    if(backBtn)backBtn.style.visibility=page===0?'hidden':'visible';
+    if(nextBtn)nextBtn.textContent=page===ONBOARD_PAGES-1?'🚀 Начать':'Далее →';
+  }
+
+  if(!localStorage.getItem('fp_onboarded')){
+    q('onboardOv').classList.add('visible');
+    onboardGoTo(0);
+  }
+
   let selectedFitnessLevel='intermediate';
   document.querySelectorAll('.onboard-level-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -2632,11 +2649,34 @@ document.addEventListener('DOMContentLoaded',()=>{
       document.querySelectorAll('.onboard-level-btn').forEach(b=>b.classList.toggle('active',b===btn));
     });
   });
-  q('onboardBtn')?.addEventListener('click',()=>{
-    applyFitnessLevelDefaults(selectedFitnessLevel);
-    q('onboardOv').classList.remove('visible');localStorage.setItem('fp_onboarded','1');checkChangelog();
+
+  document.querySelectorAll('.onboard-lang-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.onboard-lang-btn').forEach(b=>b.classList.toggle('active',b===btn));
+      applyLanguage(btn.dataset.lang);
+    });
   });
-  q('replayOnboardBtn')?.addEventListener('click',()=>{closeModal('faqModalWrap');q('onboardOv').classList.add('visible');});
+
+  q('onboardNextBtn')?.addEventListener('click',()=>{
+    if(onboardPage<ONBOARD_PAGES-1){
+      onboardGoTo(onboardPage+1);
+    }else{
+      applyFitnessLevelDefaults(selectedFitnessLevel);
+      q('onboardOv').classList.remove('visible');
+      localStorage.setItem('fp_onboarded','1');
+      checkChangelog();
+    }
+  });
+
+  q('onboardBackBtn')?.addEventListener('click',()=>{
+    if(onboardPage>0)onboardGoTo(onboardPage-1);
+  });
+
+  q('replayOnboardBtn')?.addEventListener('click',()=>{
+    closeModal('faqModalWrap');
+    onboardGoTo(0);
+    q('onboardOv').classList.add('visible');
+  });
 
   // Показываем «Что нового» существующим пользователям (у новых уже открыт онбординг,
   // им покажем changelog сразу после того, как они его закроют — см. onboardBtn выше)
