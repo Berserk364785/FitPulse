@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#a855f7">
+
+  <!-- Primary SEO -->
+  <title>FitPulse — AI-тренер с анализом движений | Бесплатно</title>
+  <meta name="description" content="FitPulse — бесплатный AI-фитнес тренер. Камера считает повторения автоматически, голосовой коуч корректирует технику в реальном времени. Отжимания, приседания, планка и ещё 4 упражнения. Работает прямо в браузере.">
+  <meta name="keywords" content="фитнес тренер, AI тренер, счётчик повторений, домашние тренировки, отжимания, приседания, планка, анализ движений, голосовой тренер, workout tracker, fitness app">
+  <meta name="author" content="FitPulse">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://berserk364785.github.io/FitPulse/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FitPulse">
+  <meta property="og:url" content="https://berserk364785.github.io/FitPulse/">
+  <meta property="og:title" content="FitPulse — AI-тренер считает повторения камерой">
+  <meta property="og:description" content="Бесплатный AI-тренер прямо в браузере. Камера отслеживает технику, голосовой коуч подсказывает в реальном времени. Зарабатывай XP, бей рекорды, соревнуйся с друзьями.">
+  <meta property="og:image" content="https://berserk364785.github.io/FitPulse/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:locale" content="ru_RU">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FitPulse — AI-тренер считает повторения камерой">
+  <meta name="twitter:description" content="Бесплатный AI-тренер в браузере. Камера + голосовой коуч + онлайн-рейтинг.">
+  <meta name="twitter:image" content="https://berserk364785.github.io/FitPulse/icon-512.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitPulse">
+
+  <!-- Icons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FitPulse",
+    "url": "https://berserk364785.github.io/FitPulse/",
+    "description": "Бесплатный AI-фитнес тренер с анализом движений через камеру, голосовым коучем и онлайн-рейтингом.",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "RUB"
+    },
+    "featureList": [
+      "Автоматический счёт повторений через камеру",
+      "Анализ техники в реальном времени",
+      "Голосовой коуч",
+      "7 упражнений: отжимания, приседания, планка и другие",
+      "XP, уровни, достижения",
+      "Онлайн-рейтинг и дуэли",
+      "Работает оффлайн (PWA)"
+    ],
+    "screenshot": "https://berserk364785.github.io/FitPulse/icon-512.png",
+    "inLanguage": ["ru", "en"]
+  }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="pulse.css">
+</head>
+<body class="theme-violet">
+<script>try{document.body.className='theme-'+(localStorage.getItem('fp_theme')||'violet');}catch(e){}</script>
+
+<!-- ONBOARDING — многошаговый -->
+<div id="onboardOv" class="onboard-ov">
+  <div class="onboard-card">
+
+    <!-- Прогресс-точки -->
+    <div class="onboard-dots">
+      <span class="onboard-dot active" data-step="0"></span>
+      <span class="onboard-dot" data-step="1"></span>
+      <span class="onboard-dot" data-step="2"></span>
+      <span class="onboard-dot" data-step="3"></span>
+    </div>
+
+    <!-- ШАГ 0 — Приветствие -->
+    <div class="onboard-step-page active" data-page="0">
+      <div class="onboard-hero">💪</div>
+      <div class="onboard-h">FitPulse</div>
+      <div class="onboard-sub">Бесплатный AI‑тренер прямо в браузере — никаких загрузок</div>
+      <div class="onboard-features">
+        <div class="onboard-feat"><span>📷</span><span>Камера считает повторения автоматически</span></div>
+        <div class="onboard-feat"><span>🗣️</span><span>Голосовой коуч корректирует технику</span></div>
+        <div class="onboard-feat"><span>🗺️</span><span>Тренировка дня, Путь героя и награды</span></div>
+        <div class="onboard-feat"><span>🏆</span><span>XP, уровни и дуэли с другими игроками</span></div>
+        <div class="onboard-feat"><span>📴</span><span>Работает без интернета</span></div>
+      </div>
+    </div>
+
+    <!-- ШАГ 1 — Как встать -->
+    <div class="onboard-step-page" data-page="1">
+      <div class="onboard-hero" style="font-size:4rem">🧍</div>
+      <div class="onboard-h" style="font-size:1.4rem">Как встать перед камерой</div>
+      <div class="onboard-tips">
+        <div class="onboard-tip good">✅ Встаньте <strong>боком</strong> — всё тело в кадре</div>
+        <div class="onboard-tip good">✅ Расстояние <strong>1–2 метра</strong> от камеры</div>
+        <div class="onboard-tip good">✅ Хорошее <strong>освещение</strong> спереди</div>
+        <div class="onboard-tip bad">❌ Не стойте <strong>лицом</strong> к камере</div>
+        <div class="onboard-tip bad">❌ Избегайте <strong>тёмного фона</strong></div>
+      </div>
+    </div>
+
+    <!-- ШАГ 2 — Уровень -->
+    <div class="onboard-step-page" data-page="2">
+      <div class="onboard-hero">🎯</div>
+      <div class="onboard-h" style="font-size:1.4rem">Ваш уровень подготовки?</div>
+      <div class="onboard-sub">Подберём задания под вас</div>
+      <div class="onboard-level-options" id="onboardLevelOptions">
+        <button class="onboard-level-btn" data-level="beginner">
+          <span class="onboard-level-ico">🌱</span>
+          <span class="onboard-level-name">Новичок</span>
+          <span class="onboard-level-desc">до 10 повт.</span>
+        </button>
+        <button class="onboard-level-btn active" data-level="intermediate">
+          <span class="onboard-level-ico">💪</span>
+          <span class="onboard-level-name">Средний</span>
+          <span class="onboard-level-desc">10–30 повт.</span>
+        </button>
+        <button class="onboard-level-btn" data-level="advanced">
+          <span class="onboard-level-ico">🔥</span>
+          <span class="onboard-level-name">Продвинутый</span>
+          <span class="onboard-level-desc">30+ повт.</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ШАГ 3 — Язык + старт -->
+    <div class="onboard-step-page" data-page="3">
+      <div class="onboard-hero">🚀</div>
+      <div class="onboard-h" style="font-size:1.4rem">Всё готово!</div>
+      <div class="onboard-sub">Выберите язык интерфейса</div>
+      <div class="onboard-lang-row">
+        <button class="onboard-lang-btn active" data-lang="ru">🇷🇺 Русский</button>
+        <button class="onboard-lang-btn" data-lang="en">🇬🇧 English</button>
+      </div>
+      <div class="onboard-final-tip">
+        Нажмите <strong>«Начать»</strong> — камера запросит разрешение при первой тренировке
+      </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="onboard-nav">
+      <button class="onboard-back" id="onboardBackBtn" style="visibility:hidden">← Назад</button>
+      <button class="onboard-btn" id="onboardNextBtn">Далее →</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="app">
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="logo">
+      <div class="logo-icon">💪</div>
+      <div class="logo-text">FitPulse</div>
+    </div>
+    <button class="fp-hstats" id="fpHStats"></button>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeBtn" title="Тема">🎨</button>
+      <button class="icon-btn" id="shareBtn" title="Поделиться">📤</button>
+      <button class="icon-btn" id="settingsBtn" title="Меню">☰</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="train" data-i18n="tabTrain">🏋️ Тренировка</button>
+    <button class="tab-btn" data-tab="duels" data-i18n="tabDuels" id="tabDuelsBtn">⚔️ Дуэли</button>
+    <button class="tab-btn" data-tab="profile" data-i18n="tabProfile">👤 Профиль</button>
+    <button class="tab-btn" data-tab="progress" data-i18n="tabProgress">📊 Прогресс</button>
+    <button class="tab-btn" data-tab="programs" data-i18n="tabPrograms">📋 Программы</button>
+    <button class="tab-btn" data-tab="community" data-i18n="tabCommunity">🏆 Рейтинг</button>
+  </div>
+  <div id="fpSubnav" class="fp-subnav" style="display:none"></div>
+
+  <!-- ===== TAB: HOME (FitPulse 2.0) ===== -->
+  <div class="tab-content active" id="tab-home">
+    <div id="fpHomeHost"><div class="fp-skel"><i style="height:58px"></i><i style="height:182px"></i><i style="height:300px"></i></div></div>
+    <div id="fpQuestHost" data-moved="1">
+    <!-- Quests / Challenge -->
+    <div class="quest-block quest-type" id="questBlock">
+      <div class="quest-header-row" onclick="toggleQuest('questBlock')">
+        <span class="quest-icon-big">📅</span>
+        <div class="quest-title" data-i18n="questsTitle">Задания на сегодня</div>
+        <span class="quest-chevron">▼</span>
+      </div>
+      <div class="quest-body">
+        <div id="questListHost"></div>
+      </div>
+    </div>
+
+    <div class="quest-block challenge-type" id="challengeBlock">
+      <div class="quest-header-row" onclick="toggleQuest('challengeBlock')">
+        <span class="quest-icon-big">⚡</span>
+        <div class="quest-title" data-i18n="challengeTitle">Вызов дня</div>
+        <span class="challenge-timer-big" id="challengeTimer">00:00</span>
+        <span class="quest-chevron">▼</span>
+      </div>
+      <div class="quest-body">
+        <div class="quest-desc" id="challengeDesc">Загрузка...</div>
+        <span class="quest-reward" id="challengeReward">+100 XP</span>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+  <!-- ===== TAB: TRAIN ===== -->
+  <div class="tab-content" id="tab-train">
+
+    <!-- Exercise grid -->
+    <div class="card">
+      <div class="card-title" data-i18n="exerciseTitle">Упражнение</div>
+      <div class="exercises-grid" id="exercisesGrid"></div>
+      <button class="more-ex-btn" id="moreExBtn">📋 Ещё <span id="moreExCount">5</span> упражнений</button>
+      <div class="goal-row">
+        <span class="goal-label" data-i18n="goalLabel">🎯 Цель:</span>
+        <input type="number" id="goalInput" class="goal-input" value="10" min="1" max="300">
+        <div class="presets" id="presets">
+          <button class="preset-btn" data-g="10">10</button>
+          <button class="preset-btn" data-g="15">15</button>
+          <button class="preset-btn" data-g="20">20</button>
+          <button class="preset-btn" data-g="30">30</button>
+          <button class="preset-btn" data-g="50">50</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeCam"data-i18n="modeCam">📷 Камера</button>
+      <button class="mode-btn" id="modeVid"data-i18n="modeVid">🎥 Видео</button>
+    </div>
+
+    <!-- Video box -->
+    <div class="video-box">
+      <video id="video" playsinline></video>
+      <video id="vidUp" style="display:none" playsinline></video>
+      <canvas id="canvas"></canvas>
+      <div class="video-overlay-ui">
+        <div class="angle-badge" id="angleBadge">–°</div>
+        <div class="quality-badge" id="qualityBadge">–</div>
+      </div>
+      <div class="vid-toast" id="vidToast"></div>
+      <div class="file-upload-btn" id="fileUploadBtn">
+        <input type="file" id="videoFile" accept="video/*">
+        <label for="videoFile">📁 Загрузить</label>
+      </div>
+      <div class="countdown-ov" id="countdownOv" style="display:none">
+        <div class="countdown-num" id="countdownNum">3</div>
+      </div>
+      <div class="demo-ov" id="demoOv" style="display:none">
+        <div class="demo-inner">
+          <div class="demo-svg-wrap" id="demoSvgWrap"></div>
+          <button class="demo-close" id="demoClose">✕</button>
+          <div class="demo-cap" id="demoCap">Техника выполнения</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="debug-line" id="debugLine">Готово</div>
+    <div class="pose-hint-row">
+      <div class="pose-hint" id="poseHint"></div>
+      <button class="hint-replay-btn" id="hintReplayBtn" title="Озвучить расположение камеры">🔊</button>
+    </div>
+    <div id="tipsWrap"></div>
+
+    <!-- Session banner -->
+    <div class="session-banner" id="sessionBanner">
+      <div class="sess-item"><div class="sess-val" id="sTime">0с</div><div class="sess-label" data-i18n="sessTime">Время</div></div>
+      <div class="sess-item"><div class="sess-val" id="sReps">0</div><div class="sess-label" data-i18n="sessReps">Повт.</div></div>
+      <div class="sess-item"><div class="sess-val" id="sCal">0</div><div class="sess-label" data-i18n="sessCal">Калорий</div></div>
+      <div class="sess-item"><div class="sess-val" id="sStr">0</div><div class="sess-label" data-i18n="sessStreak">Серия</div></div>
+    </div>
+
+    <!-- HIIT banner -->
+    <div class="hiit-banner" id="hiitBanner">
+      <div class="hiit-phase" id="hiitPhase">РАБОТА</div>
+      <div class="hiit-big" id="hiitBig">40</div>
+      <div class="hiit-dots" id="hiitDots"></div>
+    </div>
+
+    <!-- Big counter -->
+    <div class="counter-card">
+      <div class="big-num" id="bigNum">0</div>
+      <div class="ex-label" id="exLabel">Отжиманий</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-label" id="progLabel"></div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid">
+      <div class="stat-mini"><div class="stat-mini-val" id="calStat">0</div><div class="stat-mini-label" data-i18n="statCal">🔥 Калории</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" id="streakStat">0</div><div class="stat-mini-label" data-i18n="statStreak">⚡ Серия</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" id="prStat">0</div><div class="stat-mini-label" data-i18n="statRecord">🏆 Рекорд</div></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-wrap">
+      <button class="btn-start" id="startBtn">🚀 СТАРТ</button>
+      <div class="btns-row">
+        <button class="btn-sec" id="resetBtn" disabled>🔄 Сброс</button>
+        <button class="btn-sec" id="pauseBtn" disabled>⏸️ Пауза</button>
+        <button class="btn-sec" id="stopBtn" disabled>⏹️ Стоп</button>
+        <button class="btn-sec" id="hiitBtn">⚡ HIIT</button>
+        <button class="btn-sec" id="timerBtn" data-i18n="btnTimer">⏱️ Таймер</button>
+        <button class="btn-sec" id="voiceBtn">🎙️ Голос</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PROFILE ===== -->
+  <div class="tab-content" id="tab-profile">
+    <div class="profile-card">
+      <div class="profile-top">
+        <div class="avatar-wrap" id="avatarWrap" onclick="openModal('avatarModal')">
+          <div class="avatar-img" id="avatarImg">🏆</div>
+          <div class="avatar-edit-hint">✏️</div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">Спортсмен</div>
+          <div class="profile-title" id="profileTitle">Уровень 1 • Новичок</div>
+          <div class="xp-row"><span>XP: <span id="xpCur">0</span></span><span id="xpNext">100</span></div>
+          <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+          <div class="xp-efficiency" id="xpEfficiency"></div>
+        </div>
+      </div>
+      <div class="profile-stats-row">
+        <div class="profile-stat"><div class="profile-stat-val" id="psTotalReps">0</div><div class="profile-stat-label" data-i18n="totalReps">Повторений</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="psTotalCal">0</div><div class="profile-stat-label" data-i18n="totalCal">Калорий</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="psMaxStreak">0</div><div class="profile-stat-label" data-i18n="maxStreak">Макс. серия</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="psLevel">1</div><div class="profile-stat-label" data-i18n="levelLabel">Уровень</div></div>
+      </div>
+    </div>
+
+    <!-- Day streak i18n patch applied below -->
+    <div class="day-streak-banner" id="dayStreakBanner">
+      <span class="day-streak-fire">🔥</span>
+      <div class="day-streak-text">
+        <div class="day-streak-num" id="dayStreakNum">0 дней</div>
+        <div class="day-streak-sub" data-i18n="streakDaysSub">подряд с тренировкой</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="profileSettings">Настройки профиля</div>
+      <div class="field-row"><label data-i18n="nameLabel">Имя</label><input id="nameInput" class="inp" style="width:140px" value="Спортсмен"></div>
+      <div class="field-row"><label data-i18n="weightLabel">Вес (кг)</label><input type="number" id="weightInput" class="inp" value="70" min="30" max="250"></div>
+      <div class="field-row"><label data-i18n="heightLabel">Рост (см)</label><input type="number" id="heightInput" class="inp" value="170" min="100" max="250"></div>
+      <button class="m-btn" id="saveProfileBtn" style="margin-top:6px">💾 Сохранить</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="personalRecords">Личные рекорды</div>
+      <div id="prList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="achievementsTitle">🏅 Достижения</div>
+      <div class="ach-grid" id="achGrid"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <button class="m-btn danger" id="resetAllBtn">⚠️ Сбросить весь прогресс</button>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PROGRESS ===== -->
+  <div class="tab-content" id="tab-progress">
+    <div class="card">
+      <div class="card-title" data-i18n="progressChart">График прогресса</div>
+      <div class="chart-mode-toggle">
+        <button class="chart-mode-btn active" data-mode="reps"data-i18n="chartReps">📊 Повторения</button>
+        <button class="chart-mode-btn" data-mode="technique"data-i18n="chartTech">🎯 Техника</button>
+      </div>
+      <div class="chart-tabs" id="chartTabs"></div>
+      <canvas id="progressChart" height="160"></canvas>
+      <div id="chartTrendNote" class="chart-trend-note"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="progressManage">Управление</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="m-btn" id="saveSetBtn"data-i18n="saveSet">💾 Сохранить подход</button>
+        <button class="m-btn ghost" id="historyBtn"data-i18n="historyBtn">📜 История</button>
+        <button class="m-btn ghost" id="exportBtn"data-i18n="exportCSV">📤 CSV</button>
+        <button class="m-btn danger" id="clearHistBtn"data-i18n="clearBtn">🗑️ Очистить</button>
+      </div>
+    </div>
+    <div class="card" id="historyCard" style="display:none">
+      <div class="card-title" data-i18n="workoutHistory">История тренировок</div>
+      <div id="histList"></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PROGRAMS ===== -->
+  <div class="tab-content" id="tab-programs">
+    <div class="card">
+      <div class="card-title" data-i18n="workoutPrograms">Программы тренировок</div>
+      <div class="programs-grid" id="progsGrid"></div>
+    </div>
+    <div class="card" id="progStepsCard" style="display:none">
+      <div class="card-title" id="progStepsTitle"></div>
+      <div id="progStepsList"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="m-btn" id="startProgBtn"data-i18n="startStep">▶️ Начать шаг</button>
+        <button class="m-btn ghost" id="nextProgBtn"data-i18n="nextStep">⏭️ Следующий</button>
+        <button class="m-btn danger" id="cancelProgBtn">✕</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="hiitIntervals">⚡ HIIT Интервалы</div>
+      <div class="field-row"><label data-i18n="hiitWork">Работа (сек)</label><input type="number" id="hiitWork" class="inp" value="40" min="10" max="120"></div>
+      <div class="field-row"><label data-i18n="hiitRest">Отдых (сек)</label><input type="number" id="hiitRest" class="inp" value="20" min="5" max="120"></div>
+      <div class="field-row"><label data-i18n="hiitRounds">Раундов</label><input type="number" id="hiitRounds" class="inp" value="8" min="1" max="30"></div>
+      <button class="m-btn" id="startHiitBtn" style="margin-top:8px"data-i18n="startHiit">⚡ Запустить HIIT</button>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="workoutTimer">⏱️ Таймер тренировки</div>
+      <div class="field-row"><label data-i18n="timerMins">Минуты</label><input type="number" id="timerMins" class="inp" value="5" min="1" max="120"></div>
+      <button class="m-btn" id="startTimerBtn" style="margin-top:8px"data-i18n="startTimer">▶️ Запустить</button>
+      <div class="timer-display" id="timerDisplay" style="margin-top:10px">05:00</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: COMMUNITY ===== -->
+  <!-- ВКЛАДКА ДУЭЛИ -->
+  <div class="tab-content" id="tab-duels">
+    <div class="card" id="duelSection">
+      <div id="duelHost"><!-- заполняется JS --></div>
+    </div>
+    <div class="card" style="margin-top:12px;background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(124,58,237,.07));border:1px solid rgba(168,85,247,.25)">
+      <div style="font-size:.8rem;color:var(--text2);line-height:1.5">
+        <div style="font-weight:700;color:var(--text1);margin-bottom:6px">⚔️ Как работают дуэли</div>
+        <div>1. Выбери игрока из списка и нажми <strong>«Вызвать»</strong></div>
+        <div>2. Соперник получит уведомление и примет вызов</div>
+        <div>3. Оба тренируетесь <strong>60 секунд</strong> — камера считает повторения</div>
+        <div>4. Кто больше — тот победил. Победитель получает <strong>+50 XP</strong> 🏆</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-community">
+    <div class="card community-challenge-card" id="communityChallengeCard" style="display:none">
+      <div class="card-title" data-i18n="weeklyChallenge">🌍 Челлендж недели — все вместе</div>
+      <div id="communityChallengeNum" class="community-challenge-num">0 / 0</div>
+      <div class="community-challenge-bar-wrap">
+        <div class="community-challenge-bar" id="communityChallengeBar"></div>
+      </div>
+      <div style="font-size:.72rem;color:var(--text2);text-align:right;margin-top:4px"><span id="communityChallengePct">0%</span> от общей цели</div>
+    </div>
+    <div class="card team-room-card" id="teamRoomCard">
+      <div class="card-title" data-i18n="teamFriends">👥 Команда друзей</div>
+      <div class="team-room-empty">
+        <div style="font-size:.85rem;color:var(--text2);margin-bottom:10px" data-i18n="teamDesc">Создайте комнату или присоединитесь по коду — соревнуйтесь только с теми, кого знаете</div>
+        <div class="field-row" style="margin-bottom:8px">
+          <input type="text" id="newRoomName" class="inp" style="flex:1;text-align:left" placeholder="Название команды" data-i18n="roomNamePh" maxlength="40">
+          <button class="m-btn" id="createRoomBtn" style="width:auto;padding:10px 16px" data-i18n="createRoom">Создать</button>
+        </div>
+        <div class="field-row">
+          <input type="text" id="joinRoomCode" class="inp" style="flex:1;text-align:left;text-transform:uppercase" placeholder="Код комнаты" data-i18n="roomCodePh" maxlength="6">
+          <button class="m-btn ghost" id="joinRoomBtn" style="width:auto;padding:10px 16px" data-i18n="joinRoom">Войти</button>
+        </div>
+      </div>
+      <div class="team-room-active" style="display:none">
+        <div class="team-room-header">
+          <div>
+            <div class="team-room-name" id="teamRoomName">—</div>
+            <div class="team-room-code-label">Код: <strong id="teamRoomCode">—</strong></div>
+          </div>
+          <button class="m-btn ghost" id="shareRoomBtn" style="width:auto;padding:8px 12px" data-i18n="shareRoomBtn">🔗 Поделиться</button>
+        </div>
+        <div id="teamRoomMembers"></div>
+        <button class="m-btn ghost" id="leaveRoomBtn" style="margin-top:10px" data-i18n="leaveRoom">Покинуть команду</button>
+      </div>
+    </div>
+    <div class="card referral-card">
+      <div class="card-title" data-i18n="inviteTitle">🎁 Пригласи друга</div>
+      <div style="font-size:.85rem;color:var(--text2);margin-bottom:10px" data-i18n="inviteDesc">Получите <strong style="color:var(--primary)">+100 XP</strong>, когда друг по вашей ссылке завершит первую тренировку</div>
+      <button class="m-btn" id="inviteFriendBtn"data-i18n="btnInvite">🔗 Поделиться ссылкой</button>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="leaderboardTitle">🏆 Таблица лидеров</div>
+      <div id="lbList"></div>
+      <button class="m-btn ghost" id="publishNowBtn" style="margin-top:10px"data-i18n="publishBtn" data-i18n="publishBtn">🌍 Опубликовать мой результат</button>
+      <div class="lb-privacy-note" data-i18n="lbPrivacy">🔒 Фото-аватары видны только вам в профиле — в общую таблицу лидеров публикуется эмодзи для приватности</div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="notificationsTitle">🔔 Уведомления</div>
+      <button class="m-btn" id="notifBtn" data-i18n="notifBtn">🔔 Разрешить уведомления</button>
+      <div style="font-size:.76rem;color:var(--text2);margin-top:8px;" data-i18n="notifDesc">Напомним потренироваться если ты пропустишь день. Уведомление приходит даже когда приложение закрыто.</div>
+      <div id="notifStatus" style="font-size:.76rem;margin-top:6px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="shareResult">📤 Поделиться результатом</div>
+      <div id="sharePreview" class="share-preview"></div>
+      <button class="m-btn" id="shareResultBtn" style="margin-top:10px"data-i18n="shareBtn">📤 Поделиться</button>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="appUpdate">🔄 Обновление приложения</div>
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px" data-i18n="updateDesc">Если интерфейс выглядит устаревшим — нажмите кнопку ниже. Это сбросит кэш и загрузит свежую версию.</div>
+      <button class="m-btn ghost" id="forceUpdateBtn"data-i18n="updateApp">🔄 Обновить приложение</button>
+    </div>
+  </div>
+  <!-- ===== TAB: PATH (FitPulse 2.0) ===== -->
+  <div class="tab-content" id="tab-path"><div id="fpPathHost"></div></div>
+</div>
+
+<nav id="fpNav" class="fp-nav"></nav>
+
+<!-- CONFETTI -->
+<canvas id="confettiCanvas"></canvas>
+
+<!-- ===== MODALS ===== -->
+
+
+<!-- Theme -->
+<div class="modal-ov" id="themeModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>🎨 Тема</h3><button class="modal-close" data-close="themeModal">✕</button></div>
+    <div class="modal-body">
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<!-- Меню-хаб: открывается по кнопке ⚙️, ведёт в одну из трёх модалок -->
+<div class="modal-ov" id="menuHubModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Меню</h3><button class="modal-close" data-close="menuHubModal">✕</button></div>
+    <div class="modal-body">
+      <button class="m-btn ghost menu-hub-item" id="hubSettingsBtn" id="hubSettingsBtnText">⚙️ Настройки <span class="menu-hub-sub" data-i18n="hubSettingsSub">Камера, голос, отображение</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubFaqBtn" data-i18n="hubFaq">❓ Как пользоваться <span class="menu-hub-sub" data-i18n="hubFaqSub">FAQ и приветствие</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubFeedbackBtn" data-i18n="hubFeedback">💬 Обратная связь <span class="menu-hub-sub" data-i18n="hubFeedbackSub">Отзыв, идея или вопрос</span></button>
+      <button class="m-btn ghost menu-hub-item" id="hubChangelogBtn" data-i18n="hubChangelog">✨ Что нового <span class="menu-hub-sub" data-i18n="hubChangelogSub">История обновлений v8</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-head"><button class="modal-close" id="settingsBackBtn" title="Назад">←</button><h3 data-i18n="settingsTitle">⚙️ Настройки</h3><button class="modal-close" data-close="settingsModal">✕</button></div>
+    <div class="modal-body">
+      <div class="field-row"><label data-i18n="langLabel">Language / Язык</label>
+        <div style="display:flex;gap:6px">
+          <button class="lang-btn active" data-lang="ru">RU</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </div>
+      <div class="field-row"><label data-i18n="prefSide">Приоритетная сторона</label>
+        <select id="sideSelect" class="inp" style="width:110px"><option value="auto">Авто</option><option value="left">Левая</option><option value="right">Правая</option></select>
+      </div>
+      <div class="field-row"><label>Чувствительность: <span id="sensVal">1.00</span></label>
+        <input type="range" id="sensRange" min="0.8" max="1.2" step="0.02" value="1" style="width:110px">
+      </div>
+      <button class="m-btn ghost" id="calibBtn" data-i18n="calibBtn">📏 Калибровка</button>
+
+      <div class="settings-divider" data-i18n="voiceCoachDiv">🎙️ Голосовой тренер</div>
+      <div class="field-row">
+        <label data-i18n="voiceHints">Голосовые подсказки</label>
+        <input type="checkbox" id="voiceToggle" checked style="width:20px;height:20px">
+      </div>
+      <div class="field-row"><label data-i18n-prefix="voiceRate">Скорость речи: <span id="voiceRateVal">1.0x</span></label>
+        <input type="range" id="voiceRateRange" min="0.7" max="1.4" step="0.1" value="1" style="width:110px">
+      </div>
+      <div class="field-row"><label data-i18n="volume">Громкость</label>
+        <input type="range" id="voiceVolRange" min="0" max="1" step="0.1" value="0.85" style="width:110px">
+      </div>
+      <button class="m-btn ghost" id="testVoiceBtn" data-i18n="testVoice">🔊 Проверить голос</button>
+      <div class="field-row">
+        <label data-i18n="cameraHintLabel">Подсказка по камере перед каждым стартом</label>
+        <input type="checkbox" id="alwaysHintToggle" style="width:20px;height:20px">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="faqModalWrap">
+  <div class="modal-box">
+    <div class="modal-head"><button class="modal-close" id="faqBackBtn" title="Назад">←</button><h3>❓ Как пользоваться</h3><button class="modal-close" data-close="faqModalWrap">✕</button></div>
+    <div class="modal-body">
+      <button class="m-btn ghost" id="replayOnboardBtn"data-i18n="replayOnboard">🎬 Показать приветствие заново</button>
+      <div class="settings-divider" style="margin-top:4px">Частые вопросы</div>
+      <div class="faq-item">
+        <div class="faq-q">📷 Зачем нужен доступ к камере?</div>
+        <div class="faq-a">Камера используется только локально, на вашем устройстве — приложение анализирует положение тела через AI-модель MediaPipe (Google) прямо в браузере. Видео никуда не отправляется и не сохраняется.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">📐 Как правильно встать перед камерой?</div>
+        <div class="faq-a">Для большинства упражнений (отжимания, приседания, выпады) лучше встать боком к камере на расстоянии 1.5–2.5 метра, чтобы всё тело — от головы до стоп — попадало в кадр. Нажмите кнопку 🔊 рядом с подсказкой, чтобы услышать точную рекомендацию для выбранного упражнения.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🔢 Почему не засчитывается повторение?</div>
+        <div class="faq-a">Чаще всего причина — недостаточно полная амплитуда движения, плохое освещение или часть тела не попадает в кадр. Следите за индикатором угла в правом верхнем углу видео — это та цифра, по которой считаются повторения.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">⚡ Что такое XP и уровни?</div>
+        <div class="faq-a">За каждое повторение начисляется опыт (XP). При накоплении достаточного количества вы повышаете уровень. На высоких уровнях XP за одно и то же упражнение становится меньше — чередуйте упражнения, чтобы прогрессировать быстрее.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🏆 Как работает онлайн-рейтинг?</div>
+        <div class="faq-a">Ваш результат (имя, уровень, XP) публикуется в общую таблицу при завершении тренировки. Личное фото-аватар остаётся видно только вам — в общий рейтинг идёт эмодзи для приватности.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🎥 Можно ли загрузить своё видео вместо камеры?</div>
+        <div class="faq-a">Эта функция пока в разработке — сейчас доступен только режим «Камера», он полностью рабочий. Анонсируем видео-режим отдельно, когда он будет готов.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">💬 Нашли баг или есть идея?</div>
+        <div class="faq-a">Откройте «💬 Обратная связь» в меню и оставьте отзыв прямо в приложении, или напишите на почту проекта: <a href="mailto:fitpulsesupport3@gmail.com" style="color:var(--primary)">fitpulsesupport3@gmail.com</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+
+<div class="modal-ov" id="changelogModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>✨ Что нового</h3><button class="modal-close" data-close="changelogModal">✕</button></div>
+    <div class="modal-body" id="changelogBody"></div>
+  </div>
+</div>
+
+<!-- Обратная связь -->
+<div class="modal-ov" id="feedbackModal">
+  <div class="modal-box">
+    <div class="modal-head"><button class="modal-close" id="feedbackBackBtn" title="Назад">←</button><h3>💬 Обратная связь</h3><button class="modal-close" data-close="feedbackModal">✕</button></div>
+    <div class="modal-body">
+      <div class="field-row" style="display:block">
+        <label style="display:block;margin-bottom:6px" data-i18n="feedbackLabel">Ваш отзыв или идея</label>
+        <textarea id="feedbackText" class="inp" style="width:100%;min-height:100px;text-align:left;resize:vertical;font-family:inherit" placeholder="Расскажите, что понравилось или что улучшить..."></textarea>
+      </div>
+      <div class="field-row">
+        <label data-i18n="feedbackRating">Оценка</label>
+        <div id="feedbackStars" class="feedback-stars">
+          <span data-star="1">⭐</span><span data-star="2">⭐</span><span data-star="3">⭐</span><span data-star="4">⭐</span><span data-star="5">⭐</span>
+        </div>
+      </div>
+      <button class="m-btn" id="sendFeedbackBtn" data-i18n="sendFeedback">📨 Отправить отзыв</button>
+      <div style="font-size:.74rem;color:var(--text2);text-align:center;margin-top:4px" data-i18n="feedbackNote">Отзывы сохраняются и помогают делать FitPulse лучше</div>
+      <div class="settings-divider" data-i18n="contactDirect">📬 Связаться напрямую</div>
+      <div style="font-size:.84rem;color:var(--text2);margin-bottom:8px" data-i18n="contactDesc">Есть идея для приложения или нашли баг? Напишите на почту проекта:</div>
+      <a class="m-btn ghost" id="contactEmailBtn" href="mailto:" style="text-decoration:none;text-align:center;display:block" data-i18n="contactEmail">✉️ Написать на почту</a>
+    </div>
+  </div>
+</div>
+<div class="modal-ov" id="avatarModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>🖼️ Аватар</h3><button class="modal-close" data-close="avatarModal">✕</button></div>
+    <div class="modal-body">
+      <div class="avatar-upload-area" onclick="document.getElementById('avatarFileIn').click()">
+        <div class="av-big" id="avBigPreview">🏆</div>
+        <div style="font-size:.85rem;color:var(--text2)" data-i18n="avatarUpload">Нажмите чтобы загрузить фото</div>
+        <input type="file" id="avatarFileIn" accept="image/*">
+      </div>
+      <div style="font-size:.82rem;color:var(--text2);margin-top:4px;text-align:center" data-i18n="avatarOrEmoji">— или выберите эмодзи —</div>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="moreExModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3 data-i18n="allExercises">📋 Все упражнения</h3><button class="modal-close" data-close="moreExModal">✕</button></div>
+    <div class="modal-body">
+      <div class="exercises-grid" id="moreExGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="videoSoonModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3 data-i18n="videoTitle">🎥 Видео-анализ</h3><button class="modal-close" data-close="videoSoonModal">✕</button></div>
+    <div class="modal-body" style="text-align:center;padding:30px 16px;">
+      <div style="font-size:3rem;margin-bottom:14px;">🚧</div>
+      <div style="font-size:1.05rem;font-weight:700;margin-bottom:8px;" data-i18n="videoWip">Ещё в разработке</div>
+      <div style="font-size:.88rem;color:var(--text2);line-height:1.6;" data-i18n="videoWipDesc">Анализ загруженных видео пока не работает стабильно. Мы дорабатываем эту функцию и оповестим вас, когда она будет готова. Пока используйте режим «📷 Камера» — он полностью рабочий.</div>
+    </div>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script src="cloud.js"></script>
+<script src="script.js"></script>
+<script src="pulse.js"></script>
+<script src="pulse-plus.js"></script>
+<script src="pulse-pro.js"></script>
+<script src="voice/manifest.js"></script>
+<script src="pulse-coach.js"></script>
+<script src="admin.js"></script>
+<!-- DUEL OVERLAY — поверх тренировки во время дуэли -->
+<div id="duelOverlay" style="display:none;position:fixed;top:0;left:0;right:0;z-index:800;pointer-events:none;">
+  <div style="background:linear-gradient(135deg,rgba(10,5,25,.92),rgba(124,58,237,.25));padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(168,85,247,.4);">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:.72rem;font-weight:700;color:#a78bfa;text-transform:uppercase">⚔️ ДУЭЛЬ</span>
+      <span id="duelOverlayTimer" style="font-size:1.3rem;font-weight:900;color:#fff;font-variant-numeric:tabular-nums">1:00</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="text-align:center">
+        <div style="font-size:.65rem;color:#a78bfa">ТЫ</div>
+        <div id="duelOverlayMy" style="font-size:1.4rem;font-weight:900;color:#a78bfa">0</div>
+      </div>
+      <div style="font-size:.9rem;color:#666">VS</div>
+      <div style="text-align:center">
+        <div id="duelOverlayOpName" style="font-size:.65rem;color:#f59e0b;overflow:hidden;max-width:70px;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="duelOverlayOp" style="font-size:1.4rem;font-weight:900;color:#f59e0b">0</div>
+      </div>
+    </div>
+    <button id="duelOverlaySurrender" style="pointer-events:all;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#ef4444;border-radius:8px;padding:4px 10px;font-size:.72rem;cursor:pointer">✕ Сдаться</button>
+  </div>
+  <!-- Прогресс бар -->
+  <div style="height:3px;background:rgba(255,255,255,.1)">
+    <div id="duelOverlayBar" style="height:100%;background:linear-gradient(90deg,#a78bfa,#ec4899);width:50%;transition:width .5s"></div>
+  </div>
+</div>
+</body>
+</html>
